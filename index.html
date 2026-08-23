@@ -515,15 +515,15 @@
     const specs=[...container.querySelectorAll('.rich-link-spec')];if(!specs.length)return;
     const pairs=[];specs.forEach((spec,i)=>{const from=spec.dataset.from||'',to=spec.dataset.to||'';const a=wrapFirstTextMatch(container,from,'from',i),b=wrapFirstTextMatch(container,to,'to',i);if(a&&b)pairs.push({a,b,i});});if(!pairs.length)return;
     const base=container.getBoundingClientRect(),w=Math.max(container.scrollWidth,container.clientWidth),h=Math.max(container.scrollHeight,container.clientHeight),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('rich-link-layer');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
-    const defs=document.createElementNS(ns,'defs');const marker=document.createElementNS(ns,'marker');marker.setAttribute('id','richArrowHead'+Math.random().toString(36).slice(2));marker.setAttribute('markerWidth','8');marker.setAttribute('markerHeight','8');marker.setAttribute('refX','6.8');marker.setAttribute('refY','4');marker.setAttribute('orient','auto');marker.setAttribute('markerUnits','strokeWidth');const poly=document.createElementNS(ns,'path');poly.setAttribute('d','M0,0 L8,4 L0,8');poly.setAttribute('fill','none');poly.setAttribute('stroke','currentColor');poly.setAttribute('stroke-width','1.7');poly.setAttribute('stroke-linecap','round');poly.setAttribute('stroke-linejoin','round');marker.appendChild(poly);defs.appendChild(marker);svg.appendChild(defs);
+    const defs=document.createElementNS(ns,'defs');const marker=document.createElementNS(ns,'marker');marker.setAttribute('id','richArrowHead'+Math.random().toString(36).slice(2));marker.setAttribute('viewBox','0 0 10 10');marker.setAttribute('markerWidth','11');marker.setAttribute('markerHeight','11');marker.setAttribute('refX','8.7');marker.setAttribute('refY','5');marker.setAttribute('orient','auto-start-reverse');marker.setAttribute('markerUnits','userSpaceOnUse');const poly=document.createElementNS(ns,'path');poly.setAttribute('d','M1,1 L9,5 L1,9');poly.setAttribute('fill','none');poly.setAttribute('stroke','#667eea');poly.setAttribute('stroke-width','1.8');poly.setAttribute('stroke-linecap','round');poly.setAttribute('stroke-linejoin','round');marker.appendChild(poly);defs.appendChild(marker);svg.appendChild(defs);
     const markerId=marker.id;pairs.forEach(({a,b})=>{
       const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
       const aLeft=ar.left-base.left,aRight=ar.right-base.left,bLeft=br.left-base.left,bRight=br.right-base.left;
       const spaceLeft=Math.min(aLeft,bLeft),spaceRight=w-Math.max(aRight,bRight);
       const useRight=spaceRight>=spaceLeft;
       const pad=10,routeX=useRight?Math.max(Math.max(aRight,bRight)+22,w-pad):Math.min(Math.min(aLeft,bLeft)-22,pad);
-      const sx=useRight?aRight+2:aLeft-2,sy=ar.top-base.top+ar.height*.55;
-      const ex=useRight?bRight+3:bLeft-3,ey=br.top-base.top+br.height*.55;
+      const sx=useRight?aRight+7:aLeft-7,sy=ar.top-base.top+ar.height*.55;
+      const ex=useRight?bRight+11:bLeft-11,ey=br.top-base.top+br.height*.55;
       const d=connectorPath(sx,sy,ex,ey,routeX);
       const shadow=document.createElementNS(ns,'path');shadow.setAttribute('d',d);shadow.setAttribute('class','rich-link-path-shadow');
       const path=document.createElementNS(ns,'path');path.setAttribute('d',d);path.setAttribute('class','rich-link-path');path.setAttribute('marker-end',`url(#${markerId})`);
@@ -837,7 +837,7 @@
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
   let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
   document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=14').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=15').catch(()=>{}));
   renderAll();
 })();
 </script>
