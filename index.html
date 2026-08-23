@@ -180,6 +180,15 @@
     .ocr-status{font-size:10px;color:var(--muted);line-height:1.4;flex:1}
     .ocr-progress{height:7px;margin-top:8px;border-radius:999px;background:#e7e9f2;overflow:hidden}.ocr-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width .2s}
     .scan-preview{display:none}.scan-preview.show{display:block}.scan-preview img{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:17px;border:1px solid var(--line);background:#f8f9fc}
+    .crop-modal{width:min(560px,100%);max-height:94vh}
+    .crop-help{margin:-3px 0 12px;color:var(--muted);font-size:11px;line-height:1.5}
+    .crop-stage{max-height:58vh;overflow:auto;border-radius:17px;background:#171923;padding:8px;overscroll-behavior:contain}
+    .crop-image-wrap{position:relative;width:100%;line-height:0;user-select:none;-webkit-user-select:none}
+    .crop-image-wrap img{display:block;width:100%;height:auto;border-radius:10px;pointer-events:none}
+    .crop-box{position:absolute;border:3px solid #fff;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.50),0 0 0 1px rgba(0,0,0,.35);cursor:move;touch-action:none;min-width:48px;min-height:48px}
+    .crop-box::before,.crop-box::after{content:"";position:absolute;background:rgba(255,255,255,.7);pointer-events:none}.crop-box::before{left:33.33%;top:0;bottom:0;width:1px;box-shadow:calc(var(--crop-w,100px)/3) 0 0 rgba(255,255,255,.7)}.crop-box::after{top:33.33%;left:0;right:0;height:1px;box-shadow:0 calc(var(--crop-h,100px)/3) 0 rgba(255,255,255,.7)}
+    .crop-handle{position:absolute;width:30px;height:30px;border:3px solid white;background:var(--primary);border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,.25);touch-action:none}.crop-handle.nw{left:-16px;top:-16px}.crop-handle.ne{right:-16px;top:-16px}.crop-handle.sw{left:-16px;bottom:-16px}.crop-handle.se{right:-16px;bottom:-16px}
+    .crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.crop-apply{margin-top:8px}
     .page-hint{margin-top:8px;font-size:10px;font-weight:800;color:#5363dc}
     .notebook-modal{width:min(560px,100%);max-height:94vh}
     .notebook-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -327,7 +336,7 @@
   <div class="field"><label>Título</label><input name="title" placeholder="Ex.: Juros compostos" required /></div>
   <div class="field"><label>Caderno</label><select name="bookId" id="bookSelect"></select><div class="page-hint scan-only" id="scanPageHint"></div></div>
   <div class="field scan-only" id="scanCaptureField">
-    <label>📷 Escanear página</label>
+    <label>📷 Escanear página</label><div class="notice soft" style="margin-bottom:10px"><b>✂️ Recorte antes da leitura</b>Depois de escolher a foto, deixe somente a página dentro do quadro. O OCR e a foto original usarão exatamente o recorte confirmado.</div>
     <div class="scan-capture">
       <input type="file" name="image" id="scanImageInput" accept="image/*" capture="environment" />
       <div class="row" style="margin-top:10px">
@@ -345,6 +354,19 @@
   <div class="row"><label class="pill"><input type="checkbox" name="favorite" /> ⭐ Favorito</label><label class="pill"><input type="checkbox" name="pinned" /> 📌 Fixado</label></div>
   <div class="row"><button type="button" class="secondary" id="deleteNoteBtn" style="display:none">Excluir</button><button class="primary">Salvar</button></div>
 </form></div></div>
+
+<div class="modal-wrap" id="cropModal"><div class="modal crop-modal">
+  <div class="modal-head"><h2>✂️ Recortar página</h2><button class="close" type="button" id="cropCancelBtn">✕</button></div>
+  <p class="crop-help">Ajuste o quadro para deixar somente a folha que você quer digitalizar. Arraste o centro para mover e use os círculos dos cantos para redimensionar.</p>
+  <div class="crop-stage" id="cropStage"><div class="crop-image-wrap" id="cropImageWrap">
+    <img id="cropImage" alt="Foto para recorte" />
+    <div class="crop-box" id="cropBox">
+      <span class="crop-handle nw" data-crop-handle="nw"></span><span class="crop-handle ne" data-crop-handle="ne"></span><span class="crop-handle sw" data-crop-handle="sw"></span><span class="crop-handle se" data-crop-handle="se"></span>
+    </div>
+  </div></div>
+  <div class="crop-actions"><button type="button" class="secondary" id="cropFullBtn">🖼️ Foto inteira</button><button type="button" class="secondary" id="cropResetBtn">↺ Redefinir</button></div>
+  <button type="button" class="primary crop-apply" id="cropApplyBtn">✂️ Usar recorte e digitalizar</button>
+</div></div>
 
 <div class="modal-wrap" id="viewModal"><div class="modal"><div class="modal-head"><h2 id="viewTitle"></h2><button class="close" data-close>✕</button></div><div id="viewBody"></div></div></div>
 <div class="modal-wrap" id="notebookModal"><div class="modal notebook-modal"><div class="modal-head"><h2 id="notebookTitle">📖 Modo caderno</h2><button class="close" data-close>✕</button></div>
@@ -376,7 +398,7 @@
   const IMAGE_DB_NAME='MeuCadernoImagensV1';
   const IMAGE_STORE='images';
   const defaultData=()=>({version:4,books:[],notes:[],settings:{review:true},updatedAt:0});
-  let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, ocrRunning=false, tesseractLoader=null, ocrWorker=null, ocrWorkerLang='';
+  let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, ocrRunning=false, tesseractLoader=null, ocrWorker=null, ocrWorkerLang='', pendingScanDataUrl='', cropSourceUrl='', cropRect={x:0,y:0,w:0,h:0}, cropDrag=null;
 
   function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
   function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -454,6 +476,7 @@
     if(!on){document.getElementById('scanPreviewWrap').classList.remove('show');document.getElementById('scanPreviewImage').removeAttribute('src');document.getElementById('ocrProgress').style.width='0';document.getElementById('ocrStatus').textContent='Tire uma foto ou escolha uma imagem. O texto será reconhecido automaticamente.'}
   }
   function openNote(type='note',existing=null,preselectBookId=''){
+    pendingScanDataUrl='';
     const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';setScanUi(type==='scan');
     const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Digitalizar página'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';
     if(type==='formula')f.elements.content.placeholder='Fórmula:\n\nOnde:\n\nExemplo:\n\nQuando usar:';
@@ -463,12 +486,52 @@
     else f.elements.content.placeholder='Escreva o que você quer lembrar...';
     if(existing){
       document.getElementById('noteModalTitle').textContent='Editar anotação';f.elements.id.value=existing.id;f.elements.type.value=existing.type;f.elements.title.value=existing.title;f.elements.bookId.value=existing.bookId||'';f.elements.content.value=existing.content||'';f.elements.tags.value=(existing.tags||[]).join(', ');f.elements.source.value=existing.source||'';f.elements.favorite.checked=!!existing.favorite;f.elements.pinned.checked=!!existing.pinned;document.getElementById('deleteNoteBtn').style.display='block';setScanUi(existing.type==='scan');
-      if(existing.type==='scan'&&existing.image){document.getElementById('scanPreviewImage').src=existing.image;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('ocrStatus').textContent='Foto original já salva neste dispositivo.'}
+      if(existing.type==='scan'&&existing.image){pendingScanDataUrl=existing.image;document.getElementById('scanPreviewImage').src=existing.image;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('ocrStatus').textContent='Foto original já salva neste dispositivo.'}
     }else if(preselectBookId){f.elements.bookId.value=preselectBookId}
     if(type==='scan'||existing?.type==='scan')updateScanPageHint();
     closeModals();openModal('noteModal');
   }
   function compressImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const max=1600,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL('image/jpeg',.78))}catch(e){reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Imagem inválida'))};img.src=url})}
+  function setCropRect(x,y,w,h){
+    const img=document.getElementById('cropImage'),box=document.getElementById('cropBox'),W=img.clientWidth||1,H=img.clientHeight||1,min=48;
+    w=Math.max(min,Math.min(w,W));h=Math.max(min,Math.min(h,H));x=Math.max(0,Math.min(x,W-w));y=Math.max(0,Math.min(y,H-h));cropRect={x,y,w,h};
+    box.style.left=x+'px';box.style.top=y+'px';box.style.width=w+'px';box.style.height=h+'px';box.style.setProperty('--crop-w',w+'px');box.style.setProperty('--crop-h',h+'px');
+  }
+  function resetCrop(full=false){
+    const img=document.getElementById('cropImage'),W=img.clientWidth,H=img.clientHeight;if(!W||!H)return;
+    if(full)setCropRect(0,0,W,H);else{const mx=Math.max(8,W*.04),my=Math.max(8,H*.04);setCropRect(mx,my,W-mx*2,H-my*2)}
+  }
+  function closeCrop(clearInput=false){
+    document.getElementById('cropModal').classList.remove('open');cropDrag=null;
+    if(cropSourceUrl){URL.revokeObjectURL(cropSourceUrl);cropSourceUrl=''}
+    if(clearInput)document.getElementById('scanImageInput').value='';
+  }
+  function openCrop(file){
+    if(cropSourceUrl)URL.revokeObjectURL(cropSourceUrl);cropSourceUrl=URL.createObjectURL(file);
+    const img=document.getElementById('cropImage');img.onload=()=>{requestAnimationFrame(()=>resetCrop(false))};img.src=cropSourceUrl;document.getElementById('cropModal').classList.add('open');
+  }
+  async function applyCrop(){
+    const img=document.getElementById('cropImage'),W=img.clientWidth,H=img.clientHeight;if(!W||!H||!img.naturalWidth||!img.naturalHeight)return;
+    const sx=cropRect.x/W*img.naturalWidth,sy=cropRect.y/H*img.naturalHeight,sw=cropRect.w/W*img.naturalWidth,sh=cropRect.h/H*img.naturalHeight;
+    const max=1800,scale=Math.min(1,max/Math.max(sw,sh)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(sw*scale));canvas.height=Math.max(1,Math.round(sh*scale));
+    const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+    pendingScanDataUrl=canvas.toDataURL('image/jpeg',.88);document.getElementById('scanPreviewImage').src=pendingScanDataUrl;document.getElementById('scanPreviewWrap').classList.add('show');closeCrop(false);
+    document.getElementById('ocrStatus').textContent='Recorte aplicado. Preparando leitura do texto...';await runOcr();
+  }
+  function beginCropDrag(e){
+    const box=document.getElementById('cropBox');if(!box.contains(e.target))return;e.preventDefault();
+    const handle=e.target.closest('[data-crop-handle]');cropDrag={mode:handle?handle.dataset.cropHandle:'move',startX:e.clientX,startY:e.clientY,start:{...cropRect},pointerId:e.pointerId};
+    try{box.setPointerCapture(e.pointerId)}catch{}
+  }
+  function moveCropDrag(e){
+    if(!cropDrag)return;e.preventDefault();const img=document.getElementById('cropImage'),W=img.clientWidth,H=img.clientHeight,min=48,dx=e.clientX-cropDrag.startX,dy=e.clientY-cropDrag.startY,s=cropDrag.start;let x=s.x,y=s.y,w=s.w,h=s.h;
+    if(cropDrag.mode==='move'){x=s.x+dx;y=s.y+dy}
+    else{if(cropDrag.mode.includes('w')){x=s.x+dx;w=s.w-dx}if(cropDrag.mode.includes('e'))w=s.w+dx;if(cropDrag.mode.includes('n')){y=s.y+dy;h=s.h-dy}if(cropDrag.mode.includes('s'))h=s.h+dy;
+      if(w<min){if(cropDrag.mode.includes('w'))x-=min-w;w=min}if(h<min){if(cropDrag.mode.includes('n'))y-=min-h;h=min}
+      if(x<0){if(cropDrag.mode.includes('w'))w+=x;x=0}if(y<0){if(cropDrag.mode.includes('n'))h+=y;y=0}w=Math.min(w,W-x);h=Math.min(h,H-y);
+    }setCropRect(x,y,w,h);
+  }
+  function endCropDrag(){cropDrag=null}
   function loadTesseract(){
     if(window.Tesseract)return Promise.resolve(window.Tesseract);
     if(tesseractLoader)return tesseractLoader;
@@ -480,13 +543,13 @@
     return ({'loading tesseract core':'Preparando leitor...','initializing tesseract':'Iniciando leitor...','loading language traineddata':'Carregando idioma...','initializing api':'Preparando reconhecimento...','recognizing text':'Lendo a página...'})[status]||'Processando página...';
   }
   async function runOcr(){
-    const input=document.getElementById('scanImageInput'),file=input.files?.[0];if(!file||ocrRunning)return;
+    const source=pendingScanDataUrl;if(!source||ocrRunning){if(!source)document.getElementById('ocrStatus').textContent='Escolha uma foto e recorte a página primeiro.';return}
     const status=document.getElementById('ocrStatus'),bar=document.getElementById('ocrProgress'),btn=document.getElementById('runOcrBtn');ocrRunning=true;btn.disabled=true;status.textContent='Preparando reconhecimento...';bar.style.width='4%';
     try{
       const T=await loadTesseract(),lang=document.getElementById('ocrLanguage').value||'por';
       const logger=m=>{if(typeof m.progress==='number')bar.style.width=`${Math.max(4,Math.round(m.progress*100))}%`;if(m.status)status.textContent=ocrStatusText(m.status)};
       if(!ocrWorker||ocrWorkerLang!==lang){if(ocrWorker){try{await ocrWorker.terminate()}catch{}}ocrWorker=await T.createWorker(lang,1,{logger});ocrWorkerLang=lang}
-      const result=await ocrWorker.recognize(file,{rotateAuto:true});
+      const result=await ocrWorker.recognize(source,{rotateAuto:true});
       const text=String(result?.data?.text||'').trim(),f=document.getElementById('noteForm');f.elements.content.value=text;
       if(text){const first=text.split(/\n+/).map(x=>x.trim()).find(Boolean)||'';if(first&&(!f.elements.title.value.trim()||/^Página \d+$/i.test(f.elements.title.value.trim())))f.elements.title.value=first.slice(0,70);status.textContent='Texto reconhecido. Revise e corrija se necessário antes de salvar.'}
       else status.textContent='Não consegui reconhecer texto nesta imagem. Você pode digitar/corrigir manualmente.';
@@ -496,9 +559,9 @@
     }finally{ocrRunning=false;btn.disabled=false}
   }
   async function saveNote(form){
-    const fd=new FormData(form),id=fd.get('id')||uid('note'),old=data.notes.find(n=>n.id===id),img=form.elements.image?.files?.[0],type=fd.get('type')||'note',bookId=fd.get('bookId')||'',oldBookId=old?.bookId||'';
+    const fd=new FormData(form),id=fd.get('id')||uid('note'),old=data.notes.find(n=>n.id===id),type=fd.get('type')||'note',bookId=fd.get('bookId')||'',oldBookId=old?.bookId||'';
     if(type==='scan'&&!bookId){alert('Escolha um caderno para que a página digitalizada seja colocada na ordem correta.');return}
-    let image=old?.image||'',hasImage=!!old?.hasImage||!!image;if(img){try{image=await compressImage(img);await putLocalImage(id,image);hasImage=true}catch{toast('Não foi possível processar a foto');return}}
+    let image=old?.image||'',hasImage=!!old?.hasImage||!!image;if(type==='scan'&&pendingScanDataUrl){try{image=pendingScanDataUrl;await putLocalImage(id,image);hasImage=true}catch{toast('Não foi possível processar a foto');return}}
     const pageOrder=bookId?(old&&oldBookId===bookId&&Number(old.pageOrder)>0?Number(old.pageOrder):nextPageOrder(bookId)):0;
     const note={id,type,title:fd.get('title').trim(),bookId,content:fd.get('content')||'',tags:String(fd.get('tags')||'').split(',').map(x=>x.trim()).filter(Boolean),source:fd.get('source')||'',favorite:fd.get('favorite')==='on',pinned:fd.get('pinned')==='on',hasImage,image,pageOrder,createdAt:old?.createdAt||Date.now(),updatedAt:Date.now(),lastOpenedAt:Date.now()};
     if(old)Object.assign(old,note);else data.notes.push(note);
@@ -552,7 +615,9 @@
   document.getElementById('homeSearch').oninput=e=>{show('search');document.getElementById('searchInput').value=e.target.value;runSearch(e.target.value)};document.getElementById('searchInput').oninput=e=>runSearch(e.target.value);
   document.getElementById('scanQuick').onclick=()=>openNote('scan');document.getElementById('centralBtn').onclick=()=>location.href=CENTRAL_URL;
   document.getElementById('bookSelect').addEventListener('change',updateScanPageHint);
-  document.getElementById('scanImageInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;const url=URL.createObjectURL(file),img=document.getElementById('scanPreviewImage');img.onload=()=>URL.revokeObjectURL(url);img.src=url;document.getElementById('scanPreviewWrap').classList.add('show');await runOcr()});
+  document.getElementById('scanImageInput').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;openCrop(file)});
+  document.getElementById('cropBox').addEventListener('pointerdown',beginCropDrag);window.addEventListener('pointermove',moveCropDrag,{passive:false});window.addEventListener('pointerup',endCropDrag);window.addEventListener('pointercancel',endCropDrag);
+  document.getElementById('cropResetBtn').onclick=()=>resetCrop(false);document.getElementById('cropFullBtn').onclick=()=>resetCrop(true);document.getElementById('cropApplyBtn').onclick=applyCrop;document.getElementById('cropCancelBtn').onclick=()=>closeCrop(true);document.getElementById('cropModal').addEventListener('click',e=>{if(e.target.id==='cropModal'){e.stopPropagation();closeCrop(true)}});
   document.getElementById('runOcrBtn').onclick=runOcr;
   document.getElementById('prevNotebookPage').onclick=()=>{notebookState.index--;renderNotebookPage()};
   document.getElementById('nextNotebookPage').onclick=()=>{notebookState.index++;renderNotebookPage()};
