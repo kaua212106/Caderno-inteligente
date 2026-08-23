@@ -173,6 +173,25 @@
     .auth-gate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(145deg,#667eea,#764ba2);overflow:auto}.auth-locked .app,.auth-locked .bottom{display:none}.auth-ready .auth-gate{display:none}
     .auth-card{width:min(430px,100%);background:#fff;border-radius:26px;padding:24px 20px;box-shadow:0 25px 70px rgba(0,0,0,.25);color:var(--text)}.auth-logo{width:64px;height:64px;margin:0 auto 13px;border-radius:18px;display:grid;place-items:center;background:var(--soft);font-size:34px}.auth-card h1{text-align:center;margin:0;font-size:24px}.auth-sub{text-align:center;color:var(--muted);font-size:11px;line-height:1.55;margin:8px 4px 16px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:#f3f4fa;padding:4px;border-radius:14px;margin-bottom:15px}.auth-tab{border:0;background:transparent;padding:10px;border-radius:11px;font-weight:800;color:var(--muted)}.auth-tab.active{background:white;color:var(--primary);box-shadow:0 3px 12px rgba(0,0,0,.06)}.auth-form{display:grid;gap:11px}.auth-form.hidden{display:none}.auth-message{min-height:18px;margin:2px 1px 0;font-size:11px;color:var(--red);text-align:center}.auth-help{border:0;background:transparent;color:var(--primary);font-weight:800;padding:8px}.auth-loading{text-align:center;color:var(--muted);font-size:12px;padding:8px 0}.auth-offline{display:none;margin-top:10px;width:100%}
 
+    .scan-only{display:none}.scan-only.show{display:block}
+    .scan-capture{padding:13px;border:1px solid #e1e5ed;border-radius:16px;background:#f8f9fc}
+    .scan-capture input[type=file]{background:white}
+    .ocr-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+    .ocr-status{font-size:10px;color:var(--muted);line-height:1.4;flex:1}
+    .ocr-progress{height:7px;margin-top:8px;border-radius:999px;background:#e7e9f2;overflow:hidden}.ocr-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width .2s}
+    .scan-preview{display:none}.scan-preview.show{display:block}.scan-preview img{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:17px;border:1px solid var(--line);background:#f8f9fc}
+    .page-hint{margin-top:8px;font-size:10px;font-weight:800;color:#5363dc}
+    .notebook-modal{width:min(560px,100%);max-height:94vh}
+    .notebook-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .notebook-paper{position:relative;min-height:430px;padding:34px 24px 32px 46px;border:1px solid #e3dfd4;border-radius:18px;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 31px,#dfe5f2 32px);box-shadow:0 14px 32px rgba(35,40,70,.10);overflow:hidden}
+    .notebook-paper::before{content:"";position:absolute;left:31px;top:0;bottom:0;width:1px;background:#efb7b7}
+    .notebook-page-title{font-size:20px;font-weight:850;margin-bottom:14px;line-height:1.3}
+    .notebook-page-text{white-space:pre-wrap;line-height:2;min-height:70px;font-size:13px}
+    .notebook-page-photo{margin-top:22px;padding-top:16px;border-top:1px dashed #cfd4df}.notebook-page-photo b{display:block;font-size:11px;margin-bottom:9px;color:var(--muted)}.notebook-page-photo img{display:block;width:100%;border-radius:14px;border:1px solid #e1e5ed;background:white}
+    .notebook-page-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 10px;color:var(--muted);font-size:10px;font-weight:800}
+    .notebook-controls{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:13px}.notebook-count{font-size:11px;font-weight:850;color:var(--muted);white-space:nowrap}
+    .notebook-empty{padding:36px 18px;text-align:center;color:var(--muted);font-size:12px}
+
     @media(max-width:390px){.quick{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}.hero h1{font-size:24px}}
     @media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}.quick{grid-template-columns:repeat(4,1fr)}}
   </style>
@@ -233,7 +252,7 @@
         <div class="quick">
           <button data-go="favorites"><span class="emoji">⭐</span>Favoritos<small>Anotações salvas</small></button>
           <button data-go="review"><span class="emoji">🧠</span>Revisar<small>Não esquecer</small></button>
-          <button id="scanQuick"><span class="emoji">📷</span>Digitalizar<small>Foto do caderno</small></button>
+          <button id="scanQuick"><span class="emoji">📷</span>Digitalizar<small>OCR + foto original</small></button>
           <button data-go="search"><span class="emoji">🔎</span>Pesquisar<small>Achar rápido</small></button>
         </div>
       </div>
@@ -297,7 +316,7 @@
   <button data-action="new-note"><span class="emoji">📝</span>Anotação<small>Texto livre</small></button>
   <button data-action="new-formula"><span class="emoji">ƒ</span>Fórmula<small>Com explicação</small></button>
   <button data-action="new-book"><span class="emoji">📖</span>Caderno<small>Nova matéria</small></button>
-  <button data-action="scan"><span class="emoji">📷</span>Digitalizar<small>Foto da página</small></button>
+  <button data-action="scan"><span class="emoji">📷</span>Digitalizar<small>OCR + foto original</small></button>
   <button data-action="new-language"><span class="emoji">🌎</span>Idioma<small>Palavra ou expressão</small></button>
   <button data-action="new-course"><span class="emoji">🎓</span>Curso<small>Resumo de aula</small></button>
 </div></div></div>
@@ -306,15 +325,34 @@
 
 <div class="modal-wrap" id="noteModal"><div class="modal"><div class="modal-head"><h2 id="noteModalTitle">Nova anotação</h2><button class="close" data-close>✕</button></div><form class="form" id="noteForm"><input type="hidden" name="id" /><input type="hidden" name="type" value="note" />
   <div class="field"><label>Título</label><input name="title" placeholder="Ex.: Juros compostos" required /></div>
-  <div class="field"><label>Caderno</label><select name="bookId" id="bookSelect"></select></div>
-  <div class="field"><label>Conteúdo</label><textarea name="content" placeholder="Escreva o que você quer lembrar..."></textarea></div>
+  <div class="field"><label>Caderno</label><select name="bookId" id="bookSelect"></select><div class="page-hint scan-only" id="scanPageHint"></div></div>
+  <div class="field scan-only" id="scanCaptureField">
+    <label>📷 Escanear página</label>
+    <div class="scan-capture">
+      <input type="file" name="image" id="scanImageInput" accept="image/*" capture="environment" />
+      <div class="row" style="margin-top:10px">
+        <div class="field"><label>Idioma do texto</label><select id="ocrLanguage"><option value="por">Português</option><option value="spa">Espanhol</option><option value="eng">Inglês</option></select></div>
+        <div class="field" style="display:flex;align-items:end"><button type="button" class="secondary full" id="runOcrBtn">🔎 Ler novamente</button></div>
+      </div>
+      <div class="ocr-line"><div class="ocr-status" id="ocrStatus">Tire uma foto ou escolha uma imagem. O texto será reconhecido automaticamente.</div></div>
+      <div class="ocr-progress"><span id="ocrProgress"></span></div>
+      <div class="notice soft" style="margin-top:9px"><b>✍️ Reconhecimento de escrita</b>Texto impresso e letra bem legível funcionam melhor. Fórmulas e letra cursiva podem precisar de correção. Na primeira utilização, o reconhecimento pode precisar de internet.</div>
+    </div>
+  </div>
+  <div class="field"><label id="contentLabel">Conteúdo</label><textarea name="content" placeholder="Escreva o que você quer lembrar..."></textarea></div>
+  <div class="field scan-only" id="scanPreviewField"><label>📄 Foto original da página</label><div class="scan-preview" id="scanPreviewWrap"><img id="scanPreviewImage" alt="Prévia da página digitalizada" /></div><div class="notice soft" style="margin-top:9px"><b>📱 Imagem local</b>A foto original fica somente neste dispositivo. O texto reconhecido sincroniza normalmente com a sua conta.</div></div>
   <div class="row"><div class="field"><label>Tags</label><input name="tags" placeholder="investimentos, fórmula" /></div><div class="field"><label>Fonte / curso</label><input name="source" placeholder="Opcional" /></div></div>
-  <div class="field" id="imageField" style="display:none"><label>Foto da página</label><input type="file" name="image" accept="image/*" capture="environment" /><div class="notice soft" style="margin-top:9px"><b>📱 Imagem local</b>Esta foto fica somente neste dispositivo. O texto da anotação sincroniza com sua conta normalmente.</div></div>
   <div class="row"><label class="pill"><input type="checkbox" name="favorite" /> ⭐ Favorito</label><label class="pill"><input type="checkbox" name="pinned" /> 📌 Fixado</label></div>
   <div class="row"><button type="button" class="secondary" id="deleteNoteBtn" style="display:none">Excluir</button><button class="primary">Salvar</button></div>
 </form></div></div>
 
 <div class="modal-wrap" id="viewModal"><div class="modal"><div class="modal-head"><h2 id="viewTitle"></h2><button class="close" data-close>✕</button></div><div id="viewBody"></div></div></div>
+<div class="modal-wrap" id="notebookModal"><div class="modal notebook-modal"><div class="modal-head"><h2 id="notebookTitle">📖 Modo caderno</h2><button class="close" data-close>✕</button></div>
+  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Digitalizar próxima página</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button></div>
+  <div class="notebook-page-meta"><span id="notebookBookName"></span><span id="notebookPageLabel"></span></div>
+  <div id="notebookPaper" class="notebook-paper"></div>
+  <div class="notebook-controls"><button class="secondary" id="prevNotebookPage" type="button">← Anterior</button><div class="notebook-count" id="notebookCount">0 / 0</div><button class="secondary" id="nextNotebookPage" type="button">Próxima →</button></div>
+</div></div>
 <div class="modal-wrap" id="firebaseModal"><div class="modal"><div class="modal-head"><h2>☁️ Conta e sincronização</h2><button class="close" data-close>✕</button></div>
   <div class="card" style="box-shadow:none">
     <div class="account-badge"><div class="account-avatar">👤</div><div><b id="firebaseAccountEmail">Conta</b><div class="sync-line"><span class="dot" id="firebaseModalDot"></span><span id="firebaseModalStatus">Verificando...</span></div></div></div>
@@ -337,8 +375,8 @@
   const MIGRATED_KEY='meuCadernoLegacyMigratedV1';
   const IMAGE_DB_NAME='MeuCadernoImagensV1';
   const IMAGE_STORE='images';
-  const defaultData=()=>({version:3,books:[],notes:[],settings:{review:true},updatedAt:0});
-  let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false;
+  const defaultData=()=>({version:4,books:[],notes:[],settings:{review:true},updatedAt:0});
+  let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, ocrRunning=false, tesseractLoader=null, ocrWorker=null, ocrWorkerLang='';
 
   function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
   function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -349,7 +387,7 @@
   async function putLocalImage(noteId,dataUrl){if(!activeUid||!noteId||!dataUrl)return;const db=await openImageDB();await new Promise((resolve,reject)=>{const tx=db.transaction(IMAGE_STORE,'readwrite');tx.objectStore(IMAGE_STORE).put({key:`${activeUid}:${noteId}`,uid:activeUid,noteId,dataUrl,updatedAt:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
   async function deleteLocalImage(noteId){if(!activeUid||!noteId)return;const db=await openImageDB();await new Promise((resolve,reject)=>{const tx=db.transaction(IMAGE_STORE,'readwrite');tx.objectStore(IMAGE_STORE).delete(`${activeUid}:${noteId}`);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
   async function getLocalImageRecords(){if(!activeUid)return[];const db=await openImageDB();const out=await new Promise((resolve,reject)=>{const tx=db.transaction(IMAGE_STORE,'readonly');const idx=tx.objectStore(IMAGE_STORE).index('uid');const req=idx.getAll(activeUid);req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)});db.close();return out}
-  function dataWithoutImages(source=data){return {...source,version:3,notes:(source.notes||[]).map(n=>{const c={...n};if(c.image){c.hasImage=true;delete c.image}return c})}}
+  function dataWithoutImages(source=data){return {...source,version:4,notes:(source.notes||[]).map(n=>{const c={...n};if(c.image){c.hasImage=true;delete c.image}return c})}}
   async function hydrateLocalImages(){if(!activeUid)return;try{for(const n of data.notes||[]){if(typeof n.image==='string'&&n.image.startsWith('data:image/')){await putLocalImage(n.id,n.image);n.hasImage=true}}const records=await getLocalImageRecords(),map=new Map(records.map(r=>[r.noteId,r.dataUrl]));for(const n of data.notes||[]){const local=map.get(n.id);if(local){n.image=local;n.hasImage=true}else delete n.image}persistLocal();renderAll()}catch(err){console.warn('Imagens locais:',err)}}
   async function activateAccount(uid,email=''){
     activeUid=uid;activeEmail=email||'';
@@ -366,6 +404,7 @@
     }
     localStorage.setItem(LAST_ACCOUNT_KEY,JSON.stringify({uid,email:activeEmail}));
     await hydrateLocalImages();
+    ensurePageOrders();
     persistLocal();
     renderAll();
     return hadLocal;
@@ -376,8 +415,12 @@
   function typeIcon(t){return ({formula:'ƒ',language:'🌎',course:'🎓',scan:'📷',note:'📝'})[t]||'📝'}
   function empty(msg){return `<div class="empty">${esc(msg)}</div>`}
   function bookName(id){return data.books.find(b=>b.id===id)?.name||'Sem caderno'}
-  function noteCard(n){const tags=(n.tags||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');return `<article class="note" data-note="${n.id}"><div class="type">${typeIcon(n.type)}</div><div><h3>${esc(n.title)}</h3><p>${esc(bookName(n.bookId))} · ${new Date(n.updatedAt).toLocaleDateString('pt-BR')}</p>${tags}</div><div class="tools"><button class="mini" data-fav="${n.id}" title="Favorito">${n.favorite?'⭐':'☆'}</button><button class="mini" data-edit="${n.id}" title="Editar">✏️</button></div></article>`}
+  function noteCard(n){const tags=(n.tags||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join(''),page=n.bookId&&Number.isFinite(Number(n.pageOrder))?`Página ${Number(n.pageOrder)} · `:'';return `<article class="note" data-note="${n.id}"><div class="type">${typeIcon(n.type)}</div><div><h3>${esc(n.title)}</h3><p>${page}${esc(bookName(n.bookId))} · ${new Date(n.updatedAt).toLocaleDateString('pt-BR')}</p>${tags}</div><div class="tools"><button class="mini" data-fav="${n.id}" title="Favorito">${n.favorite?'⭐':'☆'}</button><button class="mini" data-edit="${n.id}" title="Editar">✏️</button></div></article>`}
   function bookCard(b){const count=data.notes.filter(n=>n.bookId===b.id).length;return `<article class="card notebook" data-book="${b.id}"><div><div class="emoji">${esc(b.emoji||'📘')}</div><h3>${esc(b.name)}</h3><p>${esc(b.description||'Seu caderno virtual')}</p></div><div class="meta">${count} ${count===1?'anotação':'anotações'}</div></article>`}
+  function ensurePageOrders(){let changed=false;const groups=new Set((data.notes||[]).map(n=>n.bookId||''));for(const bookId of groups){const list=(data.notes||[]).filter(n=>(n.bookId||'')===bookId),withOrder=list.filter(n=>Number.isFinite(Number(n.pageOrder))&&Number(n.pageOrder)>0),missing=list.filter(n=>!(Number.isFinite(Number(n.pageOrder))&&Number(n.pageOrder)>0)).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));let max=withOrder.reduce((m,n)=>Math.max(m,Number(n.pageOrder)||0),0);for(const n of missing){n.pageOrder=++max;changed=true}}return changed}
+  function orderedBookNotes(bookId){ensurePageOrders();return [...data.notes].filter(n=>n.bookId===bookId).sort((a,b)=>(Number(a.pageOrder)||999999)-(Number(b.pageOrder)||999999)||(a.createdAt||0)-(b.createdAt||0))}
+  function nextPageOrder(bookId){if(!bookId)return 0;const list=orderedBookNotes(bookId);return list.reduce((m,n)=>Math.max(m,Number(n.pageOrder)||0),0)+1}
+  function renumberBook(bookId){if(!bookId)return;orderedBookNotes(bookId).forEach((n,i)=>n.pageOrder=i+1)}
   function renderList(id,notes,msg='Nenhuma anotação por aqui ainda.'){const el=document.getElementById(id);if(el)el.innerHTML=notes.length?notes.map(noteCard).join(''):empty(msg)}
   function renderAll(){
     document.getElementById('statBooks').textContent=data.books.length;
@@ -394,20 +437,95 @@
   function openModal(id){document.getElementById(id).classList.add('open')}
   function closeModals(){document.querySelectorAll('.modal-wrap.open').forEach(x=>x.classList.remove('open'))}
   function show(view){currentView=view;document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(view+'Page')?.classList.add('active');document.querySelectorAll('[data-go]').forEach(x=>x.classList.toggle('active',x.dataset.go===view));document.getElementById('drawerWrap').classList.remove('open');if(view==='search')document.getElementById('searchInput').focus();window.scrollTo({top:0,behavior:'smooth'})}
-  function openNote(type='note',existing=null){
-    const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';
-    const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Digitalizar página'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';document.getElementById('imageField').style.display=type==='scan'?'block':'none';
+  function updateScanPageHint(){
+    const f=document.getElementById('noteForm');
+    if(f.elements.type.value!=='scan')return;
+    const bookId=f.elements.bookId.value,existing=data.notes.find(n=>n.id===f.elements.id.value);
+    const hint=document.getElementById('scanPageHint');
+    if(!bookId){hint.textContent='Escolha um caderno para colocar a página na ordem correta.';return}
+    const order=existing&&existing.bookId===bookId&&Number(existing.pageOrder)>0?Number(existing.pageOrder):nextPageOrder(bookId);
+    hint.textContent=`Esta página será colocada como página ${order} deste caderno.`;
+    const title=f.elements.title;
+    if(!existing&&(!title.value.trim()||/^Página \d+$/i.test(title.value.trim())))title.value=`Página ${order}`;
+  }
+  function setScanUi(on){
+    document.querySelectorAll('.scan-only').forEach(el=>el.classList.toggle('show',on));
+    document.getElementById('contentLabel').textContent=on?'📝 Texto digitalizado (editável)':'Conteúdo';
+    if(!on){document.getElementById('scanPreviewWrap').classList.remove('show');document.getElementById('scanPreviewImage').removeAttribute('src');document.getElementById('ocrProgress').style.width='0';document.getElementById('ocrStatus').textContent='Tire uma foto ou escolha uma imagem. O texto será reconhecido automaticamente.'}
+  }
+  function openNote(type='note',existing=null,preselectBookId=''){
+    const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';setScanUi(type==='scan');
+    const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Digitalizar página'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';
     if(type==='formula')f.elements.content.placeholder='Fórmula:\n\nOnde:\n\nExemplo:\n\nQuando usar:';
     else if(type==='language')f.elements.content.placeholder='Palavra / expressão:\nTradução:\nExemplo de uso:';
     else if(type==='course')f.elements.content.placeholder='O que aprendi nesta aula:\n\nPontos importantes:\n\nExemplo:';
+    else if(type==='scan')f.elements.content.placeholder='O texto reconhecido aparecerá aqui. Você poderá corrigir antes de salvar.';
     else f.elements.content.placeholder='Escreva o que você quer lembrar...';
-    if(existing){document.getElementById('noteModalTitle').textContent='Editar anotação';f.elements.id.value=existing.id;f.elements.type.value=existing.type;f.elements.title.value=existing.title;f.elements.bookId.value=existing.bookId||'';f.elements.content.value=existing.content||'';f.elements.tags.value=(existing.tags||[]).join(', ');f.elements.source.value=existing.source||'';f.elements.favorite.checked=!!existing.favorite;f.elements.pinned.checked=!!existing.pinned;document.getElementById('deleteNoteBtn').style.display='block';document.getElementById('imageField').style.display=existing.type==='scan'?'block':'none'}
+    if(existing){
+      document.getElementById('noteModalTitle').textContent='Editar anotação';f.elements.id.value=existing.id;f.elements.type.value=existing.type;f.elements.title.value=existing.title;f.elements.bookId.value=existing.bookId||'';f.elements.content.value=existing.content||'';f.elements.tags.value=(existing.tags||[]).join(', ');f.elements.source.value=existing.source||'';f.elements.favorite.checked=!!existing.favorite;f.elements.pinned.checked=!!existing.pinned;document.getElementById('deleteNoteBtn').style.display='block';setScanUi(existing.type==='scan');
+      if(existing.type==='scan'&&existing.image){document.getElementById('scanPreviewImage').src=existing.image;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('ocrStatus').textContent='Foto original já salva neste dispositivo.'}
+    }else if(preselectBookId){f.elements.bookId.value=preselectBookId}
+    if(type==='scan'||existing?.type==='scan')updateScanPageHint();
     closeModals();openModal('noteModal');
   }
   function compressImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const max=1600,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL('image/jpeg',.78))}catch(e){reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Imagem inválida'))};img.src=url})}
-  async function saveNote(form){const fd=new FormData(form),id=fd.get('id')||uid('note'),old=data.notes.find(n=>n.id===id),img=form.elements.image?.files?.[0];let image=old?.image||'',hasImage=!!old?.hasImage||!!image;if(img){try{image=await compressImage(img);await putLocalImage(id,image);hasImage=true}catch{toast('Não foi possível processar a foto');return}}const note={id,type:fd.get('type')||'note',title:fd.get('title').trim(),bookId:fd.get('bookId')||'',content:fd.get('content')||'',tags:String(fd.get('tags')||'').split(',').map(x=>x.trim()).filter(Boolean),source:fd.get('source')||'',favorite:fd.get('favorite')==='on',pinned:fd.get('pinned')==='on',hasImage,image,createdAt:old?.createdAt||Date.now(),updatedAt:Date.now(),lastOpenedAt:Date.now()};if(old)Object.assign(old,note);else data.notes.push(note);save();closeModals();toast(hasImage?'Anotação salva · texto sincroniza, imagem fica neste dispositivo':(navigator.onLine?'Anotação salva e pronta para sincronizar':'Anotação salva offline'))}
-  function viewNote(n){n.lastOpenedAt=Date.now();persistLocal();const imageHtml=n.image?`<div class="image-local-badge">📱 Imagem salva neste dispositivo</div><img src="${esc(n.image)}" alt="Foto da página" style="width:100%;border-radius:18px;margin-bottom:15px">`:(n.hasImage?`<div class="notice" style="margin-bottom:15px"><b>📷 Imagem não disponível neste dispositivo</b>O texto desta anotação foi sincronizado, mas a imagem é local. Importe seu backup de imagens para restaurá-la aqui.</div>`:'');document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div>${imageHtml}<div style="white-space:pre-wrap;line-height:1.65">${esc(n.content||'Sem conteúdo.')}</div>${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal')}
-  function openBook(id){const b=data.books.find(x=>x.id===id);if(!b)return;show('books');document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;renderList('bookNotes',[...data.notes].filter(n=>n.bookId===id).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)),'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll}
+  function loadTesseract(){
+    if(window.Tesseract)return Promise.resolve(window.Tesseract);
+    if(tesseractLoader)return tesseractLoader;
+    if(!navigator.onLine)return Promise.reject(new Error('ocr-first-use-offline'));
+    tesseractLoader=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';script.async=true;script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('ocr-load'));script.onerror=()=>reject(new Error('ocr-load'));document.head.appendChild(script)}).catch(err=>{tesseractLoader=null;throw err});
+    return tesseractLoader;
+  }
+  function ocrStatusText(status){
+    return ({'loading tesseract core':'Preparando leitor...','initializing tesseract':'Iniciando leitor...','loading language traineddata':'Carregando idioma...','initializing api':'Preparando reconhecimento...','recognizing text':'Lendo a página...'})[status]||'Processando página...';
+  }
+  async function runOcr(){
+    const input=document.getElementById('scanImageInput'),file=input.files?.[0];if(!file||ocrRunning)return;
+    const status=document.getElementById('ocrStatus'),bar=document.getElementById('ocrProgress'),btn=document.getElementById('runOcrBtn');ocrRunning=true;btn.disabled=true;status.textContent='Preparando reconhecimento...';bar.style.width='4%';
+    try{
+      const T=await loadTesseract(),lang=document.getElementById('ocrLanguage').value||'por';
+      const logger=m=>{if(typeof m.progress==='number')bar.style.width=`${Math.max(4,Math.round(m.progress*100))}%`;if(m.status)status.textContent=ocrStatusText(m.status)};
+      if(!ocrWorker||ocrWorkerLang!==lang){if(ocrWorker){try{await ocrWorker.terminate()}catch{}}ocrWorker=await T.createWorker(lang,1,{logger});ocrWorkerLang=lang}
+      const result=await ocrWorker.recognize(file,{rotateAuto:true});
+      const text=String(result?.data?.text||'').trim(),f=document.getElementById('noteForm');f.elements.content.value=text;
+      if(text){const first=text.split(/\n+/).map(x=>x.trim()).find(Boolean)||'';if(first&&(!f.elements.title.value.trim()||/^Página \d+$/i.test(f.elements.title.value.trim())))f.elements.title.value=first.slice(0,70);status.textContent='Texto reconhecido. Revise e corrija se necessário antes de salvar.'}
+      else status.textContent='Não consegui reconhecer texto nesta imagem. Você pode digitar/corrigir manualmente.';
+      bar.style.width='100%';
+    }catch(err){
+      console.warn('OCR:',err);bar.style.width='0';status.textContent=err?.message==='ocr-first-use-offline'?'O reconhecimento precisa de internet na primeira utilização. A foto ainda pode ser salva e o texto pode ser digitado manualmente.':'Não foi possível reconhecer o texto agora. Tente novamente ou edite manualmente.';
+    }finally{ocrRunning=false;btn.disabled=false}
+  }
+  async function saveNote(form){
+    const fd=new FormData(form),id=fd.get('id')||uid('note'),old=data.notes.find(n=>n.id===id),img=form.elements.image?.files?.[0],type=fd.get('type')||'note',bookId=fd.get('bookId')||'',oldBookId=old?.bookId||'';
+    if(type==='scan'&&!bookId){alert('Escolha um caderno para que a página digitalizada seja colocada na ordem correta.');return}
+    let image=old?.image||'',hasImage=!!old?.hasImage||!!image;if(img){try{image=await compressImage(img);await putLocalImage(id,image);hasImage=true}catch{toast('Não foi possível processar a foto');return}}
+    const pageOrder=bookId?(old&&oldBookId===bookId&&Number(old.pageOrder)>0?Number(old.pageOrder):nextPageOrder(bookId)):0;
+    const note={id,type,title:fd.get('title').trim(),bookId,content:fd.get('content')||'',tags:String(fd.get('tags')||'').split(',').map(x=>x.trim()).filter(Boolean),source:fd.get('source')||'',favorite:fd.get('favorite')==='on',pinned:fd.get('pinned')==='on',hasImage,image,pageOrder,createdAt:old?.createdAt||Date.now(),updatedAt:Date.now(),lastOpenedAt:Date.now()};
+    if(old)Object.assign(old,note);else data.notes.push(note);
+    if(oldBookId&&oldBookId!==bookId)renumberBook(oldBookId);if(bookId)renumberBook(bookId);
+    save();closeModals();toast(hasImage?'Página salva · texto sincroniza, foto fica neste dispositivo':(navigator.onLine?'Anotação salva e pronta para sincronizar':'Anotação salva offline'));
+  }
+  function noteImageHtml(n,forNotebook=false){
+    if(n.image)return `${forNotebook?'<div class="notebook-page-photo"><b>📄 Foto original da página</b>':'<div style="margin-top:18px"><div class="image-local-badge">📱 Foto original salva neste dispositivo</div>'}<img src="${esc(n.image)}" alt="Foto original da página"${forNotebook?'':' style="width:100%;border-radius:18px;margin-top:2px"'}>${forNotebook?'</div>':'</div>'}`;
+    if(n.hasImage)return `<div class="notice" style="margin-top:18px"><b>📷 Foto original não disponível neste dispositivo</b>O texto desta página foi sincronizado, mas a imagem é local. Importe seu backup de imagens para restaurá-la aqui.</div>`;
+    return '';
+  }
+  function viewNote(n){
+    n.lastOpenedAt=Date.now();persistLocal();const page=n.bookId&&Number(n.pageOrder)>0?`<span class="pill">📄 Página ${Number(n.pageOrder)}</span>`:'';
+    document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${page}${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div><div style="white-space:pre-wrap;line-height:1.65">${esc(n.content||'Sem conteúdo.')}</div>${noteImageHtml(n)}${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal')
+  }
+  function openBook(id){
+    const b=data.books.find(x=>x.id===id);if(!b)return;show('books');const notes=orderedBookNotes(id);
+    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p><div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Digitalizar próxima</button></div><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
+    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('scan',null,id)
+  }
+  function openNotebook(bookId,index=0){notebookState={bookId,index};renderNotebookPage();openModal('notebookModal')}
+  function renderNotebookPage(){
+    const b=data.books.find(x=>x.id===notebookState.bookId),notes=orderedBookNotes(notebookState.bookId),paper=document.getElementById('notebookPaper');if(!b){closeModals();return}
+    notebookState.index=Math.max(0,Math.min(notebookState.index,Math.max(0,notes.length-1)));document.getElementById('notebookTitle').textContent=`${b.emoji||'📘'} ${b.name}`;document.getElementById('notebookBookName').textContent='Modo caderno · ordem das páginas';
+    if(!notes.length){document.getElementById('notebookPageLabel').textContent='Caderno vazio';document.getElementById('notebookCount').textContent='0 / 0';paper.innerHTML='<div class="notebook-empty">Digitalize ou crie a primeira página deste caderno.</div>';document.getElementById('prevNotebookPage').disabled=true;document.getElementById('nextNotebookPage').disabled=true;document.getElementById('editNotebookPageBtn').disabled=true;return}
+    const n=notes[notebookState.index],pageNo=notebookState.index+1;document.getElementById('notebookPageLabel').textContent=`Página ${pageNo}`;document.getElementById('notebookCount').textContent=`${pageNo} / ${notes.length}`;paper.innerHTML=`<div class="notebook-page-title">${esc(n.title)}</div><div class="notebook-page-text">${esc(n.content||'Sem texto nesta página.')}</div>${noteImageHtml(n,true)}`;document.getElementById('prevNotebookPage').disabled=notebookState.index<=0;document.getElementById('nextNotebookPage').disabled=notebookState.index>=notes.length-1;document.getElementById('editNotebookPageBtn').disabled=false;
+  }
   function runSearch(q){q=(q||'').trim().toLowerCase();const out=q?data.notes.filter(n=>[n.title,n.content,n.source,bookName(n.bookId),...(n.tags||[])].join(' ').toLowerCase().includes(q)):[];renderList('searchResults',out,q?'Nenhum resultado encontrado.':'Digite algo para pesquisar em todo o seu caderno.')}
   function renderReview(){const box=document.getElementById('reviewBox');const pool=data.notes.filter(n=>n.favorite||n.pinned);if(!data.settings.review){box.innerHTML=empty('A revisão está desativada nos ajustes.');return}if(!pool.length){box.innerHTML=empty('Favorite ou fixe algumas anotações para começar a revisão.');return}const n=pool[Math.floor(Math.random()*pool.length)];box.innerHTML=`<div class="review-card"><div style="font-size:30px">🧠</div><div class="q">O que você lembra sobre “${esc(n.title)}”?</div><p style="color:var(--muted)">Tente responder de cabeça antes de revelar.</p><div class="answer" id="reviewAnswer">${esc(n.content||'Sem conteúdo.')}</div><button class="primary" id="showAnswer">Mostrar resposta</button> <button class="secondary" id="nextReview">Outra</button></div>`;document.getElementById('showAnswer').onclick=()=>document.getElementById('reviewAnswer').classList.add('show');document.getElementById('nextReview').onclick=renderReview}
   function updateCloud(){const status=window.FirebaseBridge?.status?.()||{configured:true,connected:false,label:navigator.onLine?'Conectando...':'Offline'};const connected=!!status.connected;document.getElementById('cloudText').textContent=status.label||'Firebase';document.getElementById('cloudDot').classList.toggle('ok',connected);document.getElementById('firebaseSettingText').textContent=connected?'Textos sincronizados · imagens locais':(navigator.onLine?'Aguardando sincronização dos textos':'Offline · textos sincronizam quando voltar');document.getElementById('accountEmail').textContent=activeEmail||'Conta';document.getElementById('firebaseAccountEmail').textContent=activeEmail||'Conta';document.getElementById('firebaseModalStatus').textContent=status.label||'Verificando...';document.getElementById('firebaseModalDot').classList.toggle('ok',connected)}
@@ -415,7 +533,7 @@
   function authError(err){const code=err?.code||'';return ({'auth/invalid-credential':'E-mail ou senha incorretos.','auth/email-already-in-use':'Este e-mail já possui uma conta.','auth/weak-password':'Escolha uma senha mais forte.','auth/invalid-email':'Digite um e-mail válido.','auth/too-many-requests':'Muitas tentativas. Tente novamente mais tarde.','auth/network-request-failed':'Sem conexão com a internet.','auth/user-disabled':'Esta conta foi desativada.'})[code]||'Não foi possível concluir. Verifique os dados e tente novamente.'}
   function unlock(){document.body.classList.remove('auth-locked');document.body.classList.add('auth-ready');renderAll()}
   function lock(){document.body.classList.add('auth-locked');document.body.classList.remove('auth-ready');document.getElementById('authContent').style.display='block';document.getElementById('authLoading').style.display='none';closeModals()}
-  async function reconcileCloud(){if(syncBusy||!window.FirebaseBridge?.status?.().connected)return;syncBusy=true;updateCloud();try{const cloud=await window.FirebaseBridge.pull();const localUpdated=data.updatedAt||0;if(cloud){if((cloud.updatedAt||0)>localUpdated){data={...defaultData(),...cloud,settings:{review:true,...(cloud.settings||{})}};await hydrateLocalImages();persistLocal();renderAll();toast('Textos atualizados pela nuvem')}else if(localUpdated>(cloud.updatedAt||0)){await window.FirebaseBridge.push(dataWithoutImages(data));toast('Textos sincronizados')}}else{await window.FirebaseBridge.push(dataWithoutImages(data));toast('Caderno vinculado à sua conta')}}catch(err){console.warn(err);if(navigator.onLine)toast('Não foi possível sincronizar agora')}finally{syncBusy=false;updateCloud()}}
+  async function reconcileCloud(){if(syncBusy||!window.FirebaseBridge?.status?.().connected)return;syncBusy=true;updateCloud();try{const cloud=await window.FirebaseBridge.pull();const localUpdated=data.updatedAt||0;if(cloud){if((cloud.updatedAt||0)>localUpdated){data={...defaultData(),...cloud,settings:{review:true,...(cloud.settings||{})}};await hydrateLocalImages();ensurePageOrders();persistLocal();renderAll();toast('Textos atualizados pela nuvem')}else if(localUpdated>(cloud.updatedAt||0)){await window.FirebaseBridge.push(dataWithoutImages(data));toast('Textos sincronizados')}}else{await window.FirebaseBridge.push(dataWithoutImages(data));toast('Caderno vinculado à sua conta')}}catch(err){console.warn(err);if(navigator.onLine)toast('Não foi possível sincronizar agora')}finally{syncBusy=false;updateCloud()}}
 
   document.addEventListener('click',e=>{
     const go=e.target.closest('[data-go]');if(go){show(go.dataset.go);return}
@@ -430,14 +548,21 @@
   document.getElementById('menuBtn').onclick=()=>document.getElementById('drawerWrap').classList.add('open');document.getElementById('drawerOverlay').onclick=()=>document.getElementById('drawerWrap').classList.remove('open');document.getElementById('addBtn').onclick=()=>openModal('addModal');
   document.getElementById('bookForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.currentTarget);data.books.push({id:uid('book'),emoji:fd.get('emoji')||'📘',name:fd.get('name').trim(),description:fd.get('description')||'',createdAt:Date.now(),updatedAt:Date.now()});save();e.currentTarget.reset();e.currentTarget.elements.emoji.value='📘';closeModals();toast('Caderno criado')};
   document.getElementById('noteForm').onsubmit=async e=>{e.preventDefault();await saveNote(e.currentTarget)};
-  document.getElementById('deleteNoteBtn').onclick=()=>{const id=document.getElementById('noteForm').elements.id.value;if(!id)return;if(confirm('Excluir esta anotação?')){deleteLocalImage(id).catch(()=>{});data.notes=data.notes.filter(n=>n.id!==id);save();closeModals();toast('Anotação excluída')}};
+  document.getElementById('deleteNoteBtn').onclick=()=>{const id=document.getElementById('noteForm').elements.id.value;if(!id)return;if(confirm('Excluir esta anotação?')){const old=data.notes.find(n=>n.id===id),bookId=old?.bookId||'';deleteLocalImage(id).catch(()=>{});data.notes=data.notes.filter(n=>n.id!==id);if(bookId)renumberBook(bookId);save();closeModals();toast('Anotação excluída')}};
   document.getElementById('homeSearch').oninput=e=>{show('search');document.getElementById('searchInput').value=e.target.value;runSearch(e.target.value)};document.getElementById('searchInput').oninput=e=>runSearch(e.target.value);
   document.getElementById('scanQuick').onclick=()=>openNote('scan');document.getElementById('centralBtn').onclick=()=>location.href=CENTRAL_URL;
+  document.getElementById('bookSelect').addEventListener('change',updateScanPageHint);
+  document.getElementById('scanImageInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;const url=URL.createObjectURL(file),img=document.getElementById('scanPreviewImage');img.onload=()=>URL.revokeObjectURL(url);img.src=url;document.getElementById('scanPreviewWrap').classList.add('show');await runOcr()});
+  document.getElementById('runOcrBtn').onclick=runOcr;
+  document.getElementById('prevNotebookPage').onclick=()=>{notebookState.index--;renderNotebookPage()};
+  document.getElementById('nextNotebookPage').onclick=()=>{notebookState.index++;renderNotebookPage()};
+  document.getElementById('scanNextPageBtn').onclick=()=>{const id=notebookState.bookId;closeModals();openNote('scan',null,id)};
+  document.getElementById('editNotebookPageBtn').onclick=()=>{const notes=orderedBookNotes(notebookState.bookId),n=notes[notebookState.index];if(n){closeModals();openNote(n.type,n)}};
   document.getElementById('cloudBtn').onclick=document.getElementById('firebaseInfoBtn').onclick=()=>openModal('firebaseModal');
   document.getElementById('reviewSwitch').onclick=e=>{data.settings.review=!data.settings.review;e.currentTarget.classList.toggle('on',data.settings.review);save()};
   function downloadJson(obj,name){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
   document.getElementById('exportBtn').onclick=()=>{const out=dataWithoutImages(data);out.exportType='text-backup';out.exportedAt=new Date().toISOString();downloadJson(out,'meu-caderno-textos-backup.json');toast('Backup de textos exportado')};
-  document.getElementById('importBtn').onclick=()=>document.getElementById('importInput').click();document.getElementById('importInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(!Array.isArray(obj.books)||!Array.isArray(obj.notes))throw 0;data={...defaultData(),...obj,settings:{review:true,...(obj.settings||{})},updatedAt:Date.now()};for(const n of data.notes){if(typeof n.image==='string'&&n.image.startsWith('data:image/')){await putLocalImage(n.id,n.image);n.hasImage=true}}await hydrateLocalImages();save();toast('Backup de textos importado')}catch{alert('Arquivo de backup inválido.')}finally{e.target.value=''}};
+  document.getElementById('importBtn').onclick=()=>document.getElementById('importInput').click();document.getElementById('importInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(!Array.isArray(obj.books)||!Array.isArray(obj.notes))throw 0;data={...defaultData(),...obj,settings:{review:true,...(obj.settings||{})},updatedAt:Date.now()};for(const n of data.notes){if(typeof n.image==='string'&&n.image.startsWith('data:image/')){await putLocalImage(n.id,n.image);n.hasImage=true}}await hydrateLocalImages();ensurePageOrders();save();toast('Backup de textos importado')}catch{alert('Arquivo de backup inválido.')}finally{e.target.value=''}};
   document.getElementById('exportImagesBtn').onclick=async()=>{try{const records=await getLocalImageRecords();if(!records.length){toast('Nenhuma imagem salva neste dispositivo');return}const noteMap=new Map(data.notes.map(n=>[n.id,n]));const pack={format:'meu-caderno-imagens',version:1,exportedAt:new Date().toISOString(),accountEmail:activeEmail||'',images:records.map(r=>({noteId:r.noteId,title:noteMap.get(r.noteId)?.title||'',dataUrl:r.dataUrl}))};downloadJson(pack,'meu-caderno-imagens.json');toast(`${records.length} imagem(ns) exportada(s)`)}catch(err){console.warn(err);alert('Não foi possível exportar as imagens.')}};
   document.getElementById('importImagesBtn').onclick=()=>document.getElementById('importImagesInput').click();document.getElementById('importImagesInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(obj?.format!=='meu-caderno-imagens'||!Array.isArray(obj.images))throw 0;let count=0,matched=0;for(const item of obj.images){if(!item?.noteId||typeof item.dataUrl!=='string'||!item.dataUrl.startsWith('data:image/'))continue;await putLocalImage(item.noteId,item.dataUrl);count++;const n=data.notes.find(x=>x.id===item.noteId);if(n){n.image=item.dataUrl;n.hasImage=true;n.updatedAt=Date.now();matched++}}if(matched)save();else{persistLocal();renderAll()}toast(`${count} imagem(ns) importada(s) neste dispositivo`)}catch{alert('Arquivo de imagens inválido. Use um arquivo exportado pelo Meu Caderno.')}finally{e.target.value=''}};
   document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();setAuthMessage('');const fd=new FormData(e.currentTarget);try{await window.FirebaseBridge.login(String(fd.get('email')).trim(),String(fd.get('password')))}catch(err){setAuthMessage(authError(err))}};

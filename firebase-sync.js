@@ -37,7 +37,7 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
     function sanitizeData(data){
       return {
         ...data,
-        version: 3,
+        version: 4,
         notes: (data?.notes || []).map(note => {
           const clean = {...note};
           if (clean.image) clean.hasImage = true;
@@ -57,7 +57,7 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
       ]);
       const meta = root.data() || {};
       return {
-        version: meta.version || 3,
+        version: meta.version || 4,
         settings: meta.settings || {review:true},
         updatedAt: meta.clientUpdatedAt || 0,
         books: booksSnap.docs.map(d=>d.data()),
@@ -84,7 +84,7 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
         const writes = [];
 
         writes.push(setDoc(doc(db,'users',user.uid),{
-          version:3,
+          version:4,
           email:user.email || '',
           settings:data.settings || {review:true},
           clientUpdatedAt:data.updatedAt || Date.now(),
