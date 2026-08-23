@@ -176,9 +176,6 @@
     .scan-only{display:none}.scan-only.show{display:block}
     .scan-capture{padding:13px;border:1px solid #e1e5ed;border-radius:16px;background:#f8f9fc}
     .scan-capture input[type=file]{background:white}
-    .ocr-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
-    .ocr-status{font-size:10px;color:var(--muted);line-height:1.4;flex:1}
-    .ocr-progress{height:7px;margin-top:8px;border-radius:999px;background:#e7e9f2;overflow:hidden}.ocr-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width .2s}
     .scan-preview{display:none}.scan-preview.show{display:block}.scan-preview img{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:17px;border:1px solid var(--line);background:#f8f9fc}
     .crop-modal{width:min(560px,100%);max-height:94vh}
     .crop-help{margin:-3px 0 12px;color:var(--muted);font-size:11px;line-height:1.5}
@@ -189,6 +186,7 @@
     .crop-box::before,.crop-box::after{content:"";position:absolute;background:rgba(255,255,255,.7);pointer-events:none}.crop-box::before{left:33.33%;top:0;bottom:0;width:1px;box-shadow:calc(var(--crop-w,100px)/3) 0 0 rgba(255,255,255,.7)}.crop-box::after{top:33.33%;left:0;right:0;height:1px;box-shadow:0 calc(var(--crop-h,100px)/3) 0 rgba(255,255,255,.7)}
     .crop-handle{position:absolute;width:30px;height:30px;border:3px solid white;background:var(--primary);border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,.25);touch-action:none}.crop-handle.nw{left:-16px;top:-16px}.crop-handle.ne{right:-16px;top:-16px}.crop-handle.sw{left:-16px;bottom:-16px}.crop-handle.se{right:-16px;bottom:-16px}
     .crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.crop-apply{margin-top:8px}
+    .crop-treatment{margin-top:12px;padding:12px;border:1px solid #e1e5ed;border-radius:14px;background:#f8f9fc}.crop-treatment label{display:block;margin:0 0 6px;font-size:11px;font-weight:850}.crop-treatment small{display:block;margin-top:6px;color:var(--muted);font-size:9px;line-height:1.4}
     .page-hint{margin-top:8px;font-size:10px;font-weight:800;color:#5363dc}
     .notebook-modal{width:min(560px,100%);max-height:94vh}
     .notebook-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -261,7 +259,7 @@
         <div class="quick">
           <button data-go="favorites"><span class="emoji">⭐</span>Favoritos<small>Anotações salvas</small></button>
           <button data-go="review"><span class="emoji">🧠</span>Revisar<small>Não esquecer</small></button>
-          <button id="scanQuick"><span class="emoji">📷</span>Digitalizar<small>OCR + foto original</small></button>
+          <button id="photoQuick"><span class="emoji">📷</span>Foto da página<small>Anexar imagem</small></button>
           <button data-go="search"><span class="emoji">🔎</span>Pesquisar<small>Achar rápido</small></button>
         </div>
       </div>
@@ -285,7 +283,7 @@
     <section id="reviewPage" class="page"><div class="section"><div class="section-head"><h2>🧠 Revisar conhecimento</h2></div><div id="reviewBox"></div></div></section>
     <section id="settingsPage" class="page"><div class="section"><div class="section-head"><h2>⚙️ Ajustes</h2></div><div class="settings-list">
       <div class="setting"><div class="account-badge"><div class="account-avatar">👤</div><div><b id="accountEmail">Conta</b><small id="firebaseSettingText">Verificando sincronização...</small></div></div><button class="secondary" id="firebaseInfoBtn">Gerenciar</button></div>
-      <div class="notice"><b>☁️ O que sincroniza?</b>A conta sincroniza cadernos, textos, fórmulas, tags, favoritos e demais informações. Imagens não são enviadas ao Firebase e ficam somente neste dispositivo.</div>
+      <div class="notice"><b>☁️ O que sincroniza?</b>A conta sincroniza cadernos, textos, fórmulas, tags, favoritos e demais informações. Imagens anexadas não são enviadas ao Firebase e ficam somente neste dispositivo.</div>
       <div class="setting"><div><b>Revisão aleatória</b><small>Usar favoritos e notas marcadas para revisão</small></div><button class="switch on" id="reviewSwitch"></button></div>
       <div class="setting"><div><b>Exportar backup de textos</b><small>Salva cadernos e anotações sem as imagens</small></div><button class="secondary" id="exportBtn">Exportar</button></div>
       <div class="setting"><div><b>Importar backup de textos</b><small>Restaura cadernos e anotações deste aplicativo</small></div><button class="secondary" id="importBtn">Importar</button></div>
@@ -314,7 +312,7 @@
   <div class="menu-sep"></div>
   <button class="menu-btn" data-action="new-note">📝 Nova anotação</button>
   <button class="menu-btn" data-action="new-book">📖 Novo caderno</button>
-  <button class="menu-btn" data-action="scan">📷 Digitalizar página</button>
+  <button class="menu-btn" data-action="new-photo">📷 Nova página com foto</button>
   <div class="menu-sep"></div>
   <button class="menu-btn" data-go="settings">⚙️ Ajustes</button>
   <button class="menu-btn" id="centralBtn">🏠 Abrir Central</button>
@@ -325,7 +323,7 @@
   <button data-action="new-note"><span class="emoji">📝</span>Anotação<small>Texto livre</small></button>
   <button data-action="new-formula"><span class="emoji">ƒ</span>Fórmula<small>Com explicação</small></button>
   <button data-action="new-book"><span class="emoji">📖</span>Caderno<small>Nova matéria</small></button>
-  <button data-action="scan"><span class="emoji">📷</span>Digitalizar<small>OCR + foto original</small></button>
+  <button data-action="new-photo"><span class="emoji">📷</span>Página com foto<small>Imagem anexada</small></button>
   <button data-action="new-language"><span class="emoji">🌎</span>Idioma<small>Palavra ou expressão</small></button>
   <button data-action="new-course"><span class="emoji">🎓</span>Curso<small>Resumo de aula</small></button>
 </div></div></div>
@@ -334,22 +332,17 @@
 
 <div class="modal-wrap" id="noteModal"><div class="modal"><div class="modal-head"><h2 id="noteModalTitle">Nova anotação</h2><button class="close" data-close>✕</button></div><form class="form" id="noteForm"><input type="hidden" name="id" /><input type="hidden" name="type" value="note" />
   <div class="field"><label>Título</label><input name="title" placeholder="Ex.: Juros compostos" required /></div>
-  <div class="field"><label>Caderno</label><select name="bookId" id="bookSelect"></select><div class="page-hint scan-only" id="scanPageHint"></div></div>
-  <div class="field scan-only" id="scanCaptureField">
-    <label>📷 Escanear página</label><div class="notice soft" style="margin-bottom:10px"><b>✂️ Recorte antes da leitura</b>Depois de escolher a foto, deixe somente a página dentro do quadro. O OCR e a foto original usarão exatamente o recorte confirmado.</div>
+  <div class="field"><label>Caderno</label><select name="bookId" id="bookSelect"></select><div class="page-hint" id="scanPageHint"></div></div>
+  <div class="field"><label id="contentLabel">Conteúdo</label><textarea name="content" placeholder="Escreva o que você quer lembrar..."></textarea></div>
+  <div class="field" id="scanCaptureField">
+    <label>📎 Imagem da página (opcional)</label>
+    <div class="notice soft" style="margin-bottom:10px"><b>✂️ Recorte e tratamento</b>Tire ou escolha uma foto, recorte somente a parte que deseja guardar e escolha se quer manter a imagem original, melhorar a leitura ou deixar em preto e branco.</div>
     <div class="scan-capture">
       <input type="file" name="image" id="scanImageInput" accept="image/*" capture="environment" />
-      <div class="row" style="margin-top:10px">
-        <div class="field"><label>Idioma do texto</label><select id="ocrLanguage"><option value="por">Português</option><option value="spa">Espanhol</option><option value="eng">Inglês</option></select></div>
-        <div class="field" style="display:flex;align-items:end"><button type="button" class="secondary full" id="runOcrBtn">🔎 Ler novamente</button></div>
-      </div>
-      <div class="ocr-line"><div class="ocr-status" id="ocrStatus">Tire uma foto ou escolha uma imagem. O texto será reconhecido automaticamente.</div></div>
-      <div class="ocr-progress"><span id="ocrProgress"></span></div>
-      <div class="notice soft" style="margin-top:9px"><b>✍️ Reconhecimento de escrita</b>Texto impresso e letra bem legível funcionam melhor. Fórmulas e letra cursiva podem precisar de correção. Na primeira utilização, o reconhecimento pode precisar de internet.</div>
+      <div class="notice soft" style="margin-top:9px"><b>📱 Anexo local</b>A imagem fica somente neste dispositivo. O texto da anotação continua sincronizando normalmente com sua conta.</div>
     </div>
   </div>
-  <div class="field"><label id="contentLabel">Conteúdo</label><textarea name="content" placeholder="Escreva o que você quer lembrar..."></textarea></div>
-  <div class="field scan-only" id="scanPreviewField"><label>📄 Foto original da página</label><div class="scan-preview" id="scanPreviewWrap"><img id="scanPreviewImage" alt="Prévia da página digitalizada" /></div><div class="notice soft" style="margin-top:9px"><b>📱 Imagem local</b>A foto original fica somente neste dispositivo. O texto reconhecido sincroniza normalmente com a sua conta.</div></div>
+  <div class="field" id="scanPreviewField"><label>📄 Imagem anexada</label><div class="scan-preview" id="scanPreviewWrap"><img id="scanPreviewImage" alt="Prévia da imagem anexada" /></div><button type="button" class="secondary full" id="removeAttachedImageBtn" style="display:none;margin-top:8px">Remover imagem</button></div>
   <div class="row"><div class="field"><label>Tags</label><input name="tags" placeholder="investimentos, fórmula" /></div><div class="field"><label>Fonte / curso</label><input name="source" placeholder="Opcional" /></div></div>
   <div class="row"><label class="pill"><input type="checkbox" name="favorite" /> ⭐ Favorito</label><label class="pill"><input type="checkbox" name="pinned" /> 📌 Fixado</label></div>
   <div class="row"><button type="button" class="secondary" id="deleteNoteBtn" style="display:none">Excluir</button><button class="primary">Salvar</button></div>
@@ -357,7 +350,7 @@
 
 <div class="modal-wrap" id="cropModal"><div class="modal crop-modal">
   <div class="modal-head"><h2>✂️ Recortar página</h2><button class="close" type="button" id="cropCancelBtn">✕</button></div>
-  <p class="crop-help">Ajuste o quadro para deixar somente a folha que você quer digitalizar. Arraste o centro para mover e use os círculos dos cantos para redimensionar.</p>
+  <p class="crop-help">Ajuste o quadro para deixar somente a parte da página que você quer guardar. Arraste o centro para mover e use os círculos dos cantos para redimensionar.</p>
   <div class="crop-stage" id="cropStage"><div class="crop-image-wrap" id="cropImageWrap">
     <img id="cropImage" alt="Foto para recorte" />
     <div class="crop-box" id="cropBox">
@@ -365,12 +358,13 @@
     </div>
   </div></div>
   <div class="crop-actions"><button type="button" class="secondary" id="cropFullBtn">🖼️ Foto inteira</button><button type="button" class="secondary" id="cropResetBtn">↺ Redefinir</button></div>
-  <button type="button" class="primary crop-apply" id="cropApplyBtn">✂️ Usar recorte e digitalizar</button>
+  <div class="crop-treatment"><label>✨ Tratamento da imagem</label><select id="cropTreatment"><option value="original">Original</option><option value="enhance">Melhorar página</option><option value="bw">Preto e branco</option></select><small>O tratamento é aplicado somente à imagem que será salva como anexo. Você pode escolher “Original” para não alterar a foto.</small></div>
+  <button type="button" class="primary crop-apply" id="cropApplyBtn">📎 Usar como anexo</button>
 </div></div>
 
 <div class="modal-wrap" id="viewModal"><div class="modal"><div class="modal-head"><h2 id="viewTitle"></h2><button class="close" data-close>✕</button></div><div id="viewBody"></div></div></div>
 <div class="modal-wrap" id="notebookModal"><div class="modal notebook-modal"><div class="modal-head"><h2 id="notebookTitle">📖 Modo caderno</h2><button class="close" data-close>✕</button></div>
-  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Digitalizar próxima página</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button></div>
+  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Nova página com foto</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button></div>
   <div class="notebook-page-meta"><span id="notebookBookName"></span><span id="notebookPageLabel"></span></div>
   <div id="notebookPaper" class="notebook-paper"></div>
   <div class="notebook-controls"><button class="secondary" id="prevNotebookPage" type="button">← Anterior</button><div class="notebook-count" id="notebookCount">0 / 0</div><button class="secondary" id="nextNotebookPage" type="button">Próxima →</button></div>
@@ -398,7 +392,7 @@
   const IMAGE_DB_NAME='MeuCadernoImagensV1';
   const IMAGE_STORE='images';
   const defaultData=()=>({version:4,books:[],notes:[],settings:{review:true},updatedAt:0});
-  let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, ocrRunning=false, tesseractLoader=null, ocrWorker=null, ocrWorkerLang='', pendingScanDataUrl='', cropSourceUrl='', cropRect={x:0,y:0,w:0,h:0}, cropDrag=null;
+  let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, pendingScanDataUrl='', cropSourceUrl='', cropRect={x:0,y:0,w:0,h:0}, cropDrag=null;
 
   function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
   function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -461,34 +455,30 @@
   function show(view){currentView=view;document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(view+'Page')?.classList.add('active');document.querySelectorAll('[data-go]').forEach(x=>x.classList.toggle('active',x.dataset.go===view));document.getElementById('drawerWrap').classList.remove('open');if(view==='search')document.getElementById('searchInput').focus();window.scrollTo({top:0,behavior:'smooth'})}
   function updateScanPageHint(){
     const f=document.getElementById('noteForm');
-    if(f.elements.type.value!=='scan')return;
     const bookId=f.elements.bookId.value,existing=data.notes.find(n=>n.id===f.elements.id.value);
     const hint=document.getElementById('scanPageHint');
-    if(!bookId){hint.textContent='Escolha um caderno para colocar a página na ordem correta.';return}
+    if(!bookId){hint.textContent='';return}
     const order=existing&&existing.bookId===bookId&&Number(existing.pageOrder)>0?Number(existing.pageOrder):nextPageOrder(bookId);
-    hint.textContent=`Esta página será colocada como página ${order} deste caderno.`;
-    const title=f.elements.title;
-    if(!existing&&(!title.value.trim()||/^Página \d+$/i.test(title.value.trim())))title.value=`Página ${order}`;
+    hint.textContent=`Esta anotação será a página ${order} deste caderno.`;
   }
-  function setScanUi(on){
-    document.querySelectorAll('.scan-only').forEach(el=>el.classList.toggle('show',on));
-    document.getElementById('contentLabel').textContent=on?'📝 Texto digitalizado (editável)':'Conteúdo';
-    if(!on){document.getElementById('scanPreviewWrap').classList.remove('show');document.getElementById('scanPreviewImage').removeAttribute('src');document.getElementById('ocrProgress').style.width='0';document.getElementById('ocrStatus').textContent='Tire uma foto ou escolha uma imagem. O texto será reconhecido automaticamente.'}
+  function resetAttachmentUi(){
+    document.getElementById('scanPreviewWrap').classList.remove('show');
+    document.getElementById('scanPreviewImage').removeAttribute('src');
+    document.getElementById('removeAttachedImageBtn').style.display='none';
   }
   function openNote(type='note',existing=null,preselectBookId=''){
-    pendingScanDataUrl='';
-    const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';setScanUi(type==='scan');
-    const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Digitalizar página'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';
+    pendingScanDataUrl='';resetAttachmentUi();
+    const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';
+    const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Página com foto'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';
     if(type==='formula')f.elements.content.placeholder='Fórmula:\n\nOnde:\n\nExemplo:\n\nQuando usar:';
     else if(type==='language')f.elements.content.placeholder='Palavra / expressão:\nTradução:\nExemplo de uso:';
     else if(type==='course')f.elements.content.placeholder='O que aprendi nesta aula:\n\nPontos importantes:\n\nExemplo:';
-    else if(type==='scan')f.elements.content.placeholder='O texto reconhecido aparecerá aqui. Você poderá corrigir antes de salvar.';
     else f.elements.content.placeholder='Escreva o que você quer lembrar...';
     if(existing){
-      document.getElementById('noteModalTitle').textContent='Editar anotação';f.elements.id.value=existing.id;f.elements.type.value=existing.type;f.elements.title.value=existing.title;f.elements.bookId.value=existing.bookId||'';f.elements.content.value=existing.content||'';f.elements.tags.value=(existing.tags||[]).join(', ');f.elements.source.value=existing.source||'';f.elements.favorite.checked=!!existing.favorite;f.elements.pinned.checked=!!existing.pinned;document.getElementById('deleteNoteBtn').style.display='block';setScanUi(existing.type==='scan');
-      if(existing.type==='scan'&&existing.image){pendingScanDataUrl=existing.image;document.getElementById('scanPreviewImage').src=existing.image;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('ocrStatus').textContent='Foto original já salva neste dispositivo.'}
+      document.getElementById('noteModalTitle').textContent='Editar anotação';f.elements.id.value=existing.id;f.elements.type.value=existing.type;f.elements.title.value=existing.title;f.elements.bookId.value=existing.bookId||'';f.elements.content.value=existing.content||'';f.elements.tags.value=(existing.tags||[]).join(', ');f.elements.source.value=existing.source||'';f.elements.favorite.checked=!!existing.favorite;f.elements.pinned.checked=!!existing.pinned;document.getElementById('deleteNoteBtn').style.display='block';
+      if(existing.image){pendingScanDataUrl=existing.image;document.getElementById('scanPreviewImage').src=existing.image;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('removeAttachedImageBtn').style.display='block'}
     }else if(preselectBookId){f.elements.bookId.value=preselectBookId}
-    if(type==='scan'||existing?.type==='scan')updateScanPageHint();
+    updateScanPageHint();
     closeModals();openModal('noteModal');
   }
   function compressImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const max=1600,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL('image/jpeg',.78))}catch(e){reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Imagem inválida'))};img.src=url})}
@@ -510,13 +500,30 @@
     if(cropSourceUrl)URL.revokeObjectURL(cropSourceUrl);cropSourceUrl=URL.createObjectURL(file);
     const img=document.getElementById('cropImage');img.onload=()=>{requestAnimationFrame(()=>resetCrop(false))};img.src=cropSourceUrl;document.getElementById('cropModal').classList.add('open');
   }
+  function applyTreatmentToCanvas(canvas,mode){
+    if(mode==='original')return;
+    const ctx=canvas.getContext('2d'),img=ctx.getImageData(0,0,canvas.width,canvas.height),d=img.data;
+    for(let i=0;i<d.length;i+=4){
+      let r=d[i],g=d[i+1],b=d[i+2];
+      if(mode==='enhance'){
+        r=Math.max(0,Math.min(255,(r-128)*1.22+140));
+        g=Math.max(0,Math.min(255,(g-128)*1.22+140));
+        b=Math.max(0,Math.min(255,(b-128)*1.22+140));
+      }else if(mode==='bw'){
+        const y=.299*r+.587*g+.114*b,v=y>170?255:(y<105?0:Math.round((y-105)/65*255));r=g=b=v;
+      }
+      d[i]=r;d[i+1]=g;d[i+2]=b;
+    }
+    ctx.putImageData(img,0,0);
+  }
   async function applyCrop(){
     const img=document.getElementById('cropImage'),W=img.clientWidth,H=img.clientHeight;if(!W||!H||!img.naturalWidth||!img.naturalHeight)return;
     const sx=cropRect.x/W*img.naturalWidth,sy=cropRect.y/H*img.naturalHeight,sw=cropRect.w/W*img.naturalWidth,sh=cropRect.h/H*img.naturalHeight;
     const max=1800,scale=Math.min(1,max/Math.max(sw,sh)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(sw*scale));canvas.height=Math.max(1,Math.round(sh*scale));
     const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
-    pendingScanDataUrl=canvas.toDataURL('image/jpeg',.88);document.getElementById('scanPreviewImage').src=pendingScanDataUrl;document.getElementById('scanPreviewWrap').classList.add('show');closeCrop(false);
-    document.getElementById('ocrStatus').textContent='Recorte aplicado. Preparando leitura do texto...';await runOcr();
+    applyTreatmentToCanvas(canvas,document.getElementById('cropTreatment').value||'original');
+    pendingScanDataUrl=canvas.toDataURL('image/jpeg',.9);document.getElementById('scanPreviewImage').src=pendingScanDataUrl;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('removeAttachedImageBtn').style.display='block';closeCrop(false);
+    toast('Imagem preparada e anexada');
   }
   function beginCropDrag(e){
     const box=document.getElementById('cropBox');if(!box.contains(e.target))return;e.preventDefault();
@@ -532,45 +539,18 @@
     }setCropRect(x,y,w,h);
   }
   function endCropDrag(){cropDrag=null}
-  function loadTesseract(){
-    if(window.Tesseract)return Promise.resolve(window.Tesseract);
-    if(tesseractLoader)return tesseractLoader;
-    if(!navigator.onLine)return Promise.reject(new Error('ocr-first-use-offline'));
-    tesseractLoader=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';script.async=true;script.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('ocr-load'));script.onerror=()=>reject(new Error('ocr-load'));document.head.appendChild(script)}).catch(err=>{tesseractLoader=null;throw err});
-    return tesseractLoader;
-  }
-  function ocrStatusText(status){
-    return ({'loading tesseract core':'Preparando leitor...','initializing tesseract':'Iniciando leitor...','loading language traineddata':'Carregando idioma...','initializing api':'Preparando reconhecimento...','recognizing text':'Lendo a página...'})[status]||'Processando página...';
-  }
-  async function runOcr(){
-    const source=pendingScanDataUrl;if(!source||ocrRunning){if(!source)document.getElementById('ocrStatus').textContent='Escolha uma foto e recorte a página primeiro.';return}
-    const status=document.getElementById('ocrStatus'),bar=document.getElementById('ocrProgress'),btn=document.getElementById('runOcrBtn');ocrRunning=true;btn.disabled=true;status.textContent='Preparando reconhecimento...';bar.style.width='4%';
-    try{
-      const T=await loadTesseract(),lang=document.getElementById('ocrLanguage').value||'por';
-      const logger=m=>{if(typeof m.progress==='number')bar.style.width=`${Math.max(4,Math.round(m.progress*100))}%`;if(m.status)status.textContent=ocrStatusText(m.status)};
-      if(!ocrWorker||ocrWorkerLang!==lang){if(ocrWorker){try{await ocrWorker.terminate()}catch{}}ocrWorker=await T.createWorker(lang,1,{logger});ocrWorkerLang=lang}
-      const result=await ocrWorker.recognize(source,{rotateAuto:true});
-      const text=String(result?.data?.text||'').trim(),f=document.getElementById('noteForm');f.elements.content.value=text;
-      if(text){const first=text.split(/\n+/).map(x=>x.trim()).find(Boolean)||'';if(first&&(!f.elements.title.value.trim()||/^Página \d+$/i.test(f.elements.title.value.trim())))f.elements.title.value=first.slice(0,70);status.textContent='Texto reconhecido. Revise e corrija se necessário antes de salvar.'}
-      else status.textContent='Não consegui reconhecer texto nesta imagem. Você pode digitar/corrigir manualmente.';
-      bar.style.width='100%';
-    }catch(err){
-      console.warn('OCR:',err);bar.style.width='0';status.textContent=err?.message==='ocr-first-use-offline'?'O reconhecimento precisa de internet na primeira utilização. A foto ainda pode ser salva e o texto pode ser digitado manualmente.':'Não foi possível reconhecer o texto agora. Tente novamente ou edite manualmente.';
-    }finally{ocrRunning=false;btn.disabled=false}
-  }
   async function saveNote(form){
     const fd=new FormData(form),id=fd.get('id')||uid('note'),old=data.notes.find(n=>n.id===id),type=fd.get('type')||'note',bookId=fd.get('bookId')||'',oldBookId=old?.bookId||'';
-    if(type==='scan'&&!bookId){alert('Escolha um caderno para que a página digitalizada seja colocada na ordem correta.');return}
-    let image=old?.image||'',hasImage=!!old?.hasImage||!!image;if(type==='scan'&&pendingScanDataUrl){try{image=pendingScanDataUrl;await putLocalImage(id,image);hasImage=true}catch{toast('Não foi possível processar a foto');return}}
+    let image=old?.image||'',hasImage=!!old?.hasImage||!!image;if(pendingScanDataUrl){try{image=pendingScanDataUrl;await putLocalImage(id,image);hasImage=true}catch{toast('Não foi possível processar a imagem');return}}
     const pageOrder=bookId?(old&&oldBookId===bookId&&Number(old.pageOrder)>0?Number(old.pageOrder):nextPageOrder(bookId)):0;
     const note={id,type,title:fd.get('title').trim(),bookId,content:fd.get('content')||'',tags:String(fd.get('tags')||'').split(',').map(x=>x.trim()).filter(Boolean),source:fd.get('source')||'',favorite:fd.get('favorite')==='on',pinned:fd.get('pinned')==='on',hasImage,image,pageOrder,createdAt:old?.createdAt||Date.now(),updatedAt:Date.now(),lastOpenedAt:Date.now()};
     if(old)Object.assign(old,note);else data.notes.push(note);
     if(oldBookId&&oldBookId!==bookId)renumberBook(oldBookId);if(bookId)renumberBook(bookId);
-    save();closeModals();toast(hasImage?'Página salva · texto sincroniza, foto fica neste dispositivo':(navigator.onLine?'Anotação salva e pronta para sincronizar':'Anotação salva offline'));
+    save();closeModals();toast(hasImage?'Anotação salva · texto sincroniza, imagem fica neste dispositivo':(navigator.onLine?'Anotação salva e pronta para sincronizar':'Anotação salva offline'));
   }
   function noteImageHtml(n,forNotebook=false){
-    if(n.image)return `${forNotebook?'<div class="notebook-page-photo"><b>📄 Foto original da página</b>':'<div style="margin-top:18px"><div class="image-local-badge">📱 Foto original salva neste dispositivo</div>'}<img src="${esc(n.image)}" alt="Foto original da página"${forNotebook?'':' style="width:100%;border-radius:18px;margin-top:2px"'}>${forNotebook?'</div>':'</div>'}`;
-    if(n.hasImage)return `<div class="notice" style="margin-top:18px"><b>📷 Foto original não disponível neste dispositivo</b>O texto desta página foi sincronizado, mas a imagem é local. Importe seu backup de imagens para restaurá-la aqui.</div>`;
+    if(n.image)return `${forNotebook?'<div class="notebook-page-photo"><b>📎 Imagem anexada</b>':'<div style="margin-top:18px"><div class="image-local-badge">📱 Imagem anexada neste dispositivo</div>'}<img src="${esc(n.image)}" alt="Imagem anexada"${forNotebook?'':' style="width:100%;border-radius:18px;margin-top:2px"'}>${forNotebook?'</div>':'</div>'}`;
+    if(n.hasImage)return `<div class="notice" style="margin-top:18px"><b>📷 Imagem não disponível neste dispositivo</b>O texto desta anotação foi sincronizado, mas a imagem é local. Importe seu backup de imagens para restaurá-la aqui.</div>`;
     return '';
   }
   function viewNote(n){
@@ -579,8 +559,8 @@
   }
   function openBook(id){
     const b=data.books.find(x=>x.id===id);if(!b)return;show('books');const notes=orderedBookNotes(id);
-    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p><div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Digitalizar próxima</button></div><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
-    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('scan',null,id)
+    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p><div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Nova página com foto</button></div><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
+    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('note',null,id)
   }
   function openNotebook(bookId,index=0){notebookState={bookId,index};renderNotebookPage();openModal('notebookModal')}
   function renderNotebookPage(){
@@ -600,7 +580,7 @@
 
   document.addEventListener('click',e=>{
     const go=e.target.closest('[data-go]');if(go){show(go.dataset.go);return}
-    const action=e.target.closest('[data-action]');if(action){const a=action.dataset.action;document.getElementById('drawerWrap').classList.remove('open');if(a==='new-book'){closeModals();openModal('bookModal')}else if(a==='new-note')openNote('note');else if(a==='new-formula')openNote('formula');else if(a==='new-language')openNote('language');else if(a==='new-course')openNote('course');else if(a==='scan')openNote('scan');return}
+    const action=e.target.closest('[data-action]');if(action){const a=action.dataset.action;document.getElementById('drawerWrap').classList.remove('open');if(a==='new-book'){closeModals();openModal('bookModal')}else if(a==='new-note')openNote('note');else if(a==='new-formula')openNote('formula');else if(a==='new-language')openNote('language');else if(a==='new-course')openNote('course');else if(a==='new-photo')openNote('note');return}
     const edit=e.target.closest('[data-edit]');if(edit){closeModals();openNote('note',data.notes.find(n=>n.id===edit.dataset.edit));return}
     const fav=e.target.closest('[data-fav]');if(fav){const n=data.notes.find(n=>n.id===fav.dataset.fav);if(n){n.favorite=!n.favorite;n.updatedAt=Date.now();save();toast(n.favorite?'Adicionado aos favoritos':'Removido dos favoritos')}return}
     const note=e.target.closest('[data-note]');if(note&&!e.target.closest('button')){const n=data.notes.find(n=>n.id===note.dataset.note);if(n)viewNote(n);return}
@@ -613,15 +593,15 @@
   document.getElementById('noteForm').onsubmit=async e=>{e.preventDefault();await saveNote(e.currentTarget)};
   document.getElementById('deleteNoteBtn').onclick=()=>{const id=document.getElementById('noteForm').elements.id.value;if(!id)return;if(confirm('Excluir esta anotação?')){const old=data.notes.find(n=>n.id===id),bookId=old?.bookId||'';deleteLocalImage(id).catch(()=>{});data.notes=data.notes.filter(n=>n.id!==id);if(bookId)renumberBook(bookId);save();closeModals();toast('Anotação excluída')}};
   document.getElementById('homeSearch').oninput=e=>{show('search');document.getElementById('searchInput').value=e.target.value;runSearch(e.target.value)};document.getElementById('searchInput').oninput=e=>runSearch(e.target.value);
-  document.getElementById('scanQuick').onclick=()=>openNote('scan');document.getElementById('centralBtn').onclick=()=>location.href=CENTRAL_URL;
+  document.getElementById('photoQuick').onclick=()=>openNote('note');document.getElementById('centralBtn').onclick=()=>location.href=CENTRAL_URL;
   document.getElementById('bookSelect').addEventListener('change',updateScanPageHint);
   document.getElementById('scanImageInput').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;openCrop(file)});
   document.getElementById('cropBox').addEventListener('pointerdown',beginCropDrag);window.addEventListener('pointermove',moveCropDrag,{passive:false});window.addEventListener('pointerup',endCropDrag);window.addEventListener('pointercancel',endCropDrag);
   document.getElementById('cropResetBtn').onclick=()=>resetCrop(false);document.getElementById('cropFullBtn').onclick=()=>resetCrop(true);document.getElementById('cropApplyBtn').onclick=applyCrop;document.getElementById('cropCancelBtn').onclick=()=>closeCrop(true);document.getElementById('cropModal').addEventListener('click',e=>{if(e.target.id==='cropModal'){e.stopPropagation();closeCrop(true)}});
-  document.getElementById('runOcrBtn').onclick=runOcr;
+  document.getElementById('removeAttachedImageBtn').onclick=async()=>{pendingScanDataUrl='';resetAttachmentUi();const id=document.getElementById('noteForm').elements.id.value;if(id){const n=data.notes.find(x=>x.id===id);if(n){n.image='';n.hasImage=false;n.updatedAt=Date.now();await deleteLocalImage(id).catch(()=>{});save();toast('Imagem removida')}}};
   document.getElementById('prevNotebookPage').onclick=()=>{notebookState.index--;renderNotebookPage()};
   document.getElementById('nextNotebookPage').onclick=()=>{notebookState.index++;renderNotebookPage()};
-  document.getElementById('scanNextPageBtn').onclick=()=>{const id=notebookState.bookId;closeModals();openNote('scan',null,id)};
+  document.getElementById('scanNextPageBtn').onclick=()=>{const id=notebookState.bookId;closeModals();openNote('note',null,id)};
   document.getElementById('editNotebookPageBtn').onclick=()=>{const notes=orderedBookNotes(notebookState.bookId),n=notes[notebookState.index];if(n){closeModals();openNote(n.type,n)}};
   document.getElementById('cloudBtn').onclick=document.getElementById('firebaseInfoBtn').onclick=()=>openModal('firebaseModal');
   document.getElementById('reviewSwitch').onclick=e=>{data.settings.review=!data.settings.review;e.currentTarget.classList.toggle('on',data.settings.review);save()};
