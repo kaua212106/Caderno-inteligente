@@ -1,0 +1,14 @@
+{
+  "name": "Meu Caderno",
+  "short_name": "Caderno",
+  "description": "Caderno virtual para guardar conhecimentos, fórmulas, cursos, idiomas e anotações importantes.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#6d5dfc",
+  "orientation": "portrait-primary",
+  "icons": [
+    {"src":"icone.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
