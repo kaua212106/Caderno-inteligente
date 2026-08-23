@@ -177,6 +177,7 @@
     .scan-only{display:none}.scan-only.show{display:block}
     .scan-capture{padding:13px;border:1px solid #e1e5ed;border-radius:16px;background:#f8f9fc}
     .scan-capture input[type=file]{background:white}
+    .image-source-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.image-source-btn{min-height:52px;border:1px solid #e1e5ed;border-radius:14px;background:#fff;color:var(--text);font-weight:850;padding:10px 8px}.image-source-btn span{display:block;font-size:20px;margin-bottom:3px}.image-source-input{display:none!important}@media(max-width:360px){.image-source-actions{grid-template-columns:1fr}}
     .scan-preview{display:none}.scan-preview.show{display:block}.scan-preview img{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:17px;border:1px solid var(--line);background:#f8f9fc}
     .crop-modal{width:min(560px,100%);max-height:94vh}
     .crop-help{margin:-3px 0 12px;color:var(--muted);font-size:11px;line-height:1.5}
@@ -399,7 +400,12 @@
     <label>📎 Imagem da página (opcional)</label>
     <div class="notice soft" style="margin-bottom:10px"><b>✂️ Recorte e tratamento</b>Tire ou escolha uma foto, recorte somente a parte que deseja guardar e escolha se quer manter a imagem original, melhorar a leitura ou deixar em preto e branco.</div>
     <div class="scan-capture">
-      <input type="file" name="image" id="scanImageInput" accept="image/*" capture="environment" />
+      <div class="image-source-actions">
+        <button type="button" class="image-source-btn" id="takePhotoBtn"><span>📷</span>Tirar foto</button>
+        <button type="button" class="image-source-btn" id="chooseGalleryBtn"><span>🖼️</span>Escolher da galeria</button>
+      </div>
+      <input class="image-source-input" type="file" id="cameraImageInput" accept="image/*" capture="environment" />
+      <input class="image-source-input" type="file" name="image" id="scanImageInput" accept="image/*" />
       <div class="notice soft" style="margin-top:9px"><b>📱 Anexo local</b>A imagem fica somente neste dispositivo. O texto da anotação continua sincronizando normalmente com sua conta.</div>
     </div>
   </div>
@@ -791,7 +797,7 @@
   function closeCrop(clearInput=false){
     document.getElementById('cropModal').classList.remove('open');cropDrag=null;
     if(cropSourceUrl){URL.revokeObjectURL(cropSourceUrl);cropSourceUrl=''}
-    if(clearInput)document.getElementById('scanImageInput').value='';
+    if(clearInput){document.getElementById('scanImageInput').value='';document.getElementById('cameraImageInput').value=''}
   }
   function openCrop(file){
     if(cropSourceUrl)URL.revokeObjectURL(cropSourceUrl);cropSourceUrl=URL.createObjectURL(file);
@@ -903,7 +909,11 @@
   document.getElementById('homeSearch').oninput=e=>{show('search');document.getElementById('searchInput').value=e.target.value;runSearch(e.target.value)};document.getElementById('searchInput').oninput=e=>runSearch(e.target.value);
   document.getElementById('photoQuick').onclick=()=>openNote('note');document.getElementById('centralBtn').onclick=()=>location.href=CENTRAL_URL;
   document.getElementById('bookSelect').addEventListener('change',updateScanPageHint);
-  document.getElementById('scanImageInput').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;openCrop(file)});
+  document.getElementById('takePhotoBtn').onclick=()=>document.getElementById('cameraImageInput').click();
+  document.getElementById('chooseGalleryBtn').onclick=()=>document.getElementById('scanImageInput').click();
+  const handleImageChoice=e=>{const file=e.target.files?.[0];if(!file)return;openCrop(file)};
+  document.getElementById('cameraImageInput').addEventListener('change',handleImageChoice);
+  document.getElementById('scanImageInput').addEventListener('change',handleImageChoice);
   document.getElementById('cropBox').addEventListener('pointerdown',beginCropDrag);window.addEventListener('pointermove',moveCropDrag,{passive:false});window.addEventListener('pointerup',endCropDrag);window.addEventListener('pointercancel',endCropDrag);
   document.getElementById('cropResetBtn').onclick=()=>resetCrop(false);document.getElementById('cropFullBtn').onclick=()=>resetCrop(true);document.getElementById('cropApplyBtn').onclick=applyCrop;document.getElementById('cropCancelBtn').onclick=()=>closeCrop(true);document.getElementById('cropModal').addEventListener('click',e=>{if(e.target.id==='cropModal'){e.stopPropagation();closeCrop(true)}});
   document.getElementById('removeAttachedImageBtn').onclick=async()=>{pendingScanDataUrl='';resetAttachmentUi();const id=document.getElementById('noteForm').elements.id.value;if(id){const n=data.notes.find(x=>x.id===id);if(n){n.image='';n.hasImage=false;n.updatedAt=Date.now();await deleteLocalImage(id).catch(()=>{});save();toast('Imagem removida')}}};
