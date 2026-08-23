@@ -226,6 +226,7 @@
     .rich-table-wrap{overflow-x:auto;margin:12px 0}.rich-table{width:100%;border-collapse:collapse;background:white;font-size:.94em}.rich-table th,.rich-table td{border:1px solid #d9deea;padding:8px 9px;text-align:left;vertical-align:top;min-width:78px}.rich-table th{background:#eef1ff;color:#3d4e9d;font-weight:850}
     .rich-callout{margin:12px 0;padding:12px 13px;border-radius:13px;background:#f3f5ff;border:1px solid rgba(102,116,232,.20);border-left:4px solid var(--primary)}.rich-callout b{display:block;margin-bottom:4px}.rich-callout-body{white-space:normal}
     .rich-link-scope{position:relative}.rich-link-spec{display:none!important}.rich-link-anchor{position:relative;z-index:4}.rich-link-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:3}.rich-link-path{fill:none;stroke:var(--primary);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.rich-link-path-shadow{fill:none;stroke:rgba(102,116,232,.14);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}.rich-link-dot{fill:var(--primary)}.rich-link-arrow-head{fill:none;stroke:var(--primary);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .manual-arrow-spec{display:none!important}.block-preview.manual-arrow-draw-mode{position:relative;cursor:crosshair;user-select:none;-webkit-user-select:none;outline:2px solid rgba(102,116,232,.28);outline-offset:2px}.manual-arrow-draft-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:9}.manual-arrow-draft-path{fill:none;stroke:var(--primary);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.manual-arrow-draft-shadow{fill:none;stroke:rgba(102,116,232,.14);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}.manual-arrow-point{fill:white;stroke:var(--primary);stroke-width:2}.manual-arrow-point.start{fill:var(--primary)}.manual-arrow-point-label{font-size:9px;font-weight:800;fill:var(--primary);paint-order:stroke;stroke:white;stroke-width:3px;stroke-linejoin:round}.manual-arrow-guide{margin:8px 0 0;padding:9px 10px;border-radius:11px;background:#eef1ff;color:#46548d;font-size:10px;line-height:1.45}.manual-arrow-guide b{display:block;color:#2f3d7c;margin-bottom:2px}.manual-arrow-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.manual-arrow-actions button{min-height:42px}
     .rich-group{display:grid;grid-template-columns:20px 1fr;gap:8px;margin:12px 0}.rich-brace{font-family:Georgia,serif;font-size:58px;line-height:.9;color:var(--primary);display:flex;align-items:center;justify-content:center;transform:scaleY(1.25)}.rich-group-title{font-weight:850;margin-bottom:5px}.rich-group-items{display:grid;gap:4px}.rich-group-item{padding:3px 0;border-bottom:1px dashed rgba(104,113,135,.18)}
     .rich-separator{height:1px;background:linear-gradient(90deg,transparent,#b7bed4,transparent);margin:18px 0}
     .rich-image-placeholder{margin:12px 0;padding:14px;text-align:center;border:1px dashed #cfd5e6;border-radius:13px;color:var(--muted);background:#fafbff;font-size:11px}
@@ -385,7 +386,7 @@
         <button type="button" class="block-tool" data-block-action="text"><span>📝</span>Texto</button>
         <button type="button" class="block-tool" data-block-action="table"><span>▦</span>Tabela</button>
         <button type="button" class="block-tool" data-block-action="callout"><span>📌</span>Caixa</button>
-        <button type="button" class="block-tool" data-block-action="arrow"><span>↗</span>Ligar</button>
+        <button type="button" class="block-tool" data-block-action="manualarrow"><span>✏️</span>Seta</button>
         <button type="button" class="block-tool" data-block-action="group"><span>{</span>Agrupar</button>
         <button type="button" class="block-tool" data-block-action="separator"><span>—</span>Separador</button>
         <button type="button" class="block-tool" data-block-action="image"><span>📎</span>Imagem</button>
@@ -453,7 +454,7 @@
   const IMAGE_STORE='images';
   const defaultData=()=>({version:4,books:[],notes:[],settings:{review:true},updatedAt:0});
   let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, pendingScanDataUrl='', cropSourceUrl='', cropRect={x:0,y:0,w:0,h:0}, cropDrag=null;
-  let formulaBuilderAction='fraction', blockBuilderAction='';
+  let formulaBuilderAction='fraction', blockBuilderAction='', manualArrowDrawing=false, manualArrowPoints=[];
 
   function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
   function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -478,6 +479,7 @@
     x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,payload)=>{const t=blockDecode(payload,{headers:[],rows:[]}),headers=Array.isArray(t?.headers)?t.headers:[],rows=Array.isArray(t?.rows)?t.rows:[];if(!headers.length&&!rows.length)return'';const cols=Math.max(headers.length,...rows.map(r=>Array.isArray(r)?r.length:0),1);const head=headers.length?`<thead><tr>${Array.from({length:cols},(_,i)=>`<th>${renderInlineContent(headers[i]||'')}</th>`).join('')}</tr></thead>`:'';const body=`<tbody>${rows.map(r=>`<tr>${Array.from({length:cols},(_,i)=>`<td>${renderInlineContent((r||[])[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody>`;return `<div class="rich-table-wrap"><table class="rich-table">${head}${body}</table></div>`});
     x=x.replace(/\[\[box\|([^\]]+)\]\]/g,(_,payload)=>{const b=blockDecode(payload,{title:'',text:''});return `<div class="rich-callout">${b?.title?`<b>${renderInlineContent(b.title)}</b>`:''}<div class="rich-callout-body">${renderInlineContent(b?.text||'')}</div></div>`});
     x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,(_,payload)=>{const a=blockDecode(payload,{from:'',to:''});return `<span class="rich-link-spec" data-from="${esc(a?.from||'')}" data-to="${esc(a?.to||'')}"></span>`});
+    x=x.replace(/\[\[manualarrow\|([^\]]+)\]\]/g,(_,payload)=>`<span class="manual-arrow-spec" data-points="${esc(payload)}"></span>`);
     x=x.replace(/\[\[group\|([^\]]+)\]\]/g,(_,payload)=>{const g=blockDecode(payload,{title:'',items:[]}),items=Array.isArray(g?.items)?g.items:[];return `<div class="rich-group"><div class="rich-brace">{</div><div>${g?.title?`<div class="rich-group-title">${renderInlineContent(g.title)}</div>`:''}<div class="rich-group-items">${items.map(v=>`<div class="rich-group-item">${renderInlineContent(v)}</div>`).join('')}</div></div></div>`});
     x=x.replace(/\[\[sep\]\]/g,'<div class="rich-separator"></div>');
     x=x.replace(/\[\[image\]\]/g,()=>noteObj?noteImageHtml(noteObj,forNotebook):'<div class="rich-image-placeholder">📎 Imagem anexada aparecerá aqui.</div>');
@@ -526,20 +528,33 @@
     const lx=backX-uy*wing,ly=backY+ux*wing,rx=backX+uy*wing,ry=backY-ux*wing;
     return `M ${lx} ${ly} L ${ex} ${ey} L ${rx} ${ry}`;
   }
+  function manualArrowPath(points){
+    if(!Array.isArray(points)||points.length<2)return'';
+    if(points.length===2)return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+    const parts=[`M ${points[0].x} ${points[0].y}`];
+    for(let i=1;i<points.length-1;i++){
+      const prev=points[i-1],cur=points[i],next=points[i+1];
+      const d1=Math.hypot(cur.x-prev.x,cur.y-prev.y)||1,d2=Math.hypot(next.x-cur.x,next.y-cur.y)||1;
+      const r=Math.min(16,d1*.32,d2*.32);
+      const before={x:cur.x+(prev.x-cur.x)*(r/d1),y:cur.y+(prev.y-cur.y)*(r/d1)};
+      const after={x:cur.x+(next.x-cur.x)*(r/d2),y:cur.y+(next.y-cur.y)*(r/d2)};
+      parts.push(`L ${before.x} ${before.y}`,`Q ${cur.x} ${cur.y} ${after.x} ${after.y}`);
+    }
+    const end=points[points.length-1];parts.push(`L ${end.x} ${end.y}`);return parts.join(' ');
+  }
   function drawRichLinks(container){
     if(!container||!container.isConnected)return;
     container.classList.add('rich-link-scope');
     container.querySelector('.rich-link-layer')?.remove();
     unwrapRichLinkAnchors(container);
-    const specs=[...container.querySelectorAll('.rich-link-spec')];
-    if(!specs.length)return;
+    const specs=[...container.querySelectorAll('.rich-link-spec')],manualSpecs=[...container.querySelectorAll('.manual-arrow-spec')];
+    if(!specs.length&&!manualSpecs.length)return;
     const pairs=[];
     specs.forEach((spec,i)=>{
       const from=spec.dataset.from||'',to=spec.dataset.to||'';
       const a=wrapFirstTextMatch(container,from,'from',i),b=wrapFirstTextMatch(container,to,'to',i);
       if(a&&b)pairs.push({a,b,i});
     });
-    if(!pairs.length)return;
     const base=container.getBoundingClientRect();
     const w=Math.max(1,container.clientWidth),h=Math.max(1,container.scrollHeight);
     const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
@@ -570,6 +585,17 @@
       dot.setAttribute('cx',String(sx));dot.setAttribute('cy',String(sy));dot.setAttribute('r','2.8');dot.setAttribute('class','rich-link-dot');
       svg.append(shadow,path,head,dot);
     });
+    manualSpecs.forEach(spec=>{
+      const obj=blockDecode(spec.dataset.points,{points:[]}),raw=Array.isArray(obj?.points)?obj.points:[];
+      const pts=raw.map(p=>({x:Math.max(0,Math.min(1,Number(p?.x)||0))*w,y:Math.max(0,Math.min(1,Number(p?.y)||0))*h}));
+      if(pts.length<2)return;
+      const d=manualArrowPath(pts),end=pts[pts.length-1],prev=pts[pts.length-2];
+      const shadow=document.createElementNS(ns,'path');shadow.setAttribute('d',d);shadow.setAttribute('class','rich-link-path-shadow');
+      const path=document.createElementNS(ns,'path');path.setAttribute('d',d);path.setAttribute('class','rich-link-path');
+      const head=document.createElementNS(ns,'path');head.setAttribute('d',arrowHeadPath(end.x,end.y,prev.x,prev.y));head.setAttribute('class','rich-link-arrow-head');
+      const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',String(pts[0].x));dot.setAttribute('cy',String(pts[0].y));dot.setAttribute('r','2.8');dot.setAttribute('class','rich-link-dot');
+      svg.append(shadow,path,head,dot);
+    });
     container.prepend(svg);
   }
   function scheduleRichLinks(container){requestAnimationFrame(()=>requestAnimationFrame(()=>drawRichLinks(container)))}
@@ -577,7 +603,7 @@
     let x=String(raw);
     x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,p)=>{const t=blockDecode(p,{headers:[],rows:[]});return [...(t.headers||[]),...(t.rows||[]).flat()].join(' ')});
     x=x.replace(/\[\[(?:box|group)\|([^\]]+)\]\]/g,(_,p)=>{const o=blockDecode(p,{});return Object.values(o||{}).flat().join(' ')});
-    x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,' ');
+    x=x.replace(/\[\[(?:arrow|manualarrow)\|([^\]]+)\]\]/g,' ');
     x=x.replace(/\[\[(?:frac|pow|sub)\|([^|\]]*)\|([^\]]*)\]\]/g,'$1 $2').replace(/\[\[root\|([^\]]*)\]\]/g,'$1').replace(/\[\[(?:sep|image)\]\]/g,' ');
     return x;
   }
@@ -677,13 +703,32 @@
   }
   function refreshBlockPreview(){
     const area=document.getElementById('noteContent'),preview=document.getElementById('blockPreview');if(!area||!preview)return;
-    preview.innerHTML=area.value.trim()?renderRichContent(area.value):'<span style="color:var(--muted)">O conteúdo da página aparecerá aqui.</span>';scheduleRichLinks(preview);
+    preview.innerHTML=area.value.trim()?renderRichContent(area.value):'<span style="color:var(--muted)">O conteúdo da página aparecerá aqui.</span>';scheduleRichLinks(preview);if(manualArrowDrawing)requestAnimationFrame(renderManualArrowDraft);
+  }
+  function setManualArrowStatus(){
+    const el=document.getElementById('manualArrowStatus');if(!el)return;const n=manualArrowPoints.length;
+    el.textContent=n===0?'Toque no ponto onde a seta deve começar.':n===1?'Agora toque onde ela deve virar ou terminar.':`${n} pontos marcados. Continue tocando para criar curvas ou finalize a seta.`;
+  }
+  function renderManualArrowDraft(){
+    const preview=document.getElementById('blockPreview');if(!preview||!manualArrowDrawing)return;preview.querySelector('.manual-arrow-draft-layer')?.remove();
+    const w=Math.max(1,preview.scrollWidth),h=Math.max(1,preview.scrollHeight),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('manual-arrow-draft-layer');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
+    const pts=manualArrowPoints.map(p=>({x:p.x*w,y:p.y*h}));
+    if(pts.length>=2){const d=manualArrowPath(pts),shadow=document.createElementNS(ns,'path'),path=document.createElementNS(ns,'path'),end=pts[pts.length-1],prev=pts[pts.length-2],head=document.createElementNS(ns,'path');shadow.setAttribute('d',d);shadow.setAttribute('class','manual-arrow-draft-shadow');path.setAttribute('d',d);path.setAttribute('class','manual-arrow-draft-path');head.setAttribute('d',arrowHeadPath(end.x,end.y,prev.x,prev.y));head.setAttribute('class','rich-link-arrow-head');svg.append(shadow,path,head)}
+    pts.forEach((p,i)=>{const c=document.createElementNS(ns,'circle');c.setAttribute('cx',String(p.x));c.setAttribute('cy',String(p.y));c.setAttribute('r',i===0?'5':'4.5');c.setAttribute('class',`manual-arrow-point${i===0?' start':''}`);svg.appendChild(c);const t=document.createElementNS(ns,'text');t.setAttribute('x',String(p.x+7));t.setAttribute('y',String(p.y-7));t.setAttribute('class','manual-arrow-point-label');t.textContent=String(i+1);svg.appendChild(t)});preview.appendChild(svg);
+  }
+  function beginManualArrowDrawing(){manualArrowDrawing=true;manualArrowPoints=[];document.getElementById('blockPreview')?.classList.add('manual-arrow-draw-mode');setManualArrowStatus();renderManualArrowDraft()}
+  function stopManualArrowDrawing(clear=true){manualArrowDrawing=false;if(clear)manualArrowPoints=[];const preview=document.getElementById('blockPreview');preview?.classList.remove('manual-arrow-draw-mode');preview?.querySelector('.manual-arrow-draft-layer')?.remove()}
+  function handleManualArrowTap(e){
+    if(!manualArrowDrawing)return;const preview=document.getElementById('blockPreview');if(!preview)return;e.preventDefault();e.stopPropagation();const rect=preview.getBoundingClientRect(),w=Math.max(1,preview.scrollWidth),h=Math.max(1,preview.scrollHeight);let x=(e.clientX-rect.left+preview.scrollLeft)/w,y=(e.clientY-rect.top+preview.scrollTop)/h;x=Math.max(0,Math.min(1,x));y=Math.max(0,Math.min(1,y));manualArrowPoints.push({x:+x.toFixed(5),y:+y.toFixed(5)});setManualArrowStatus();renderManualArrowDraft();
   }
   function setBlockTools(open){
-    const tools=document.getElementById('blockTools');if(!tools)return;tools.classList.toggle('show',!!open);if(open)refreshBlockPreview();else document.getElementById('blockBuilder')?.classList.remove('show');
+    const tools=document.getElementById('blockTools');if(!tools)return;tools.classList.toggle('show',!!open);if(open)refreshBlockPreview();else{document.getElementById('blockBuilder')?.classList.remove('show');stopManualArrowDrawing();}
   }
   function openBlockBuilder(action){
-    blockBuilderAction=action;const box=document.getElementById('blockBuilder'),title=document.getElementById('blockBuilderTitle'),fields=document.getElementById('blockBuilderFields');
+    stopManualArrowDrawing();blockBuilderAction=action;const box=document.getElementById('blockBuilder'),title=document.getElementById('blockBuilderTitle'),fields=document.getElementById('blockBuilderFields'),insertBtn=document.getElementById('blockBuilderInsert');insertBtn.textContent='Inserir bloco';
+    if(action==='manualarrow'){
+      title.textContent='✏️ Desenhar seta';fields.innerHTML='<div class="manual-arrow-guide"><b>Você escolhe o caminho</b>1. Toque onde a seta começa. 2. Toque em cada lugar onde ela deve virar. 3. Toque no ponto final. 4. Pressione “Finalizar seta”.</div><div class="manual-arrow-guide" id="manualArrowStatus">Toque no ponto onde a seta deve começar.</div><div class="manual-arrow-actions"><button type="button" class="secondary" id="manualArrowUndo">↶ Desfazer ponto</button><button type="button" class="secondary" id="manualArrowClear">Limpar</button></div>';box.classList.add('show');insertBtn.textContent='Finalizar seta';beginManualArrowDrawing();document.getElementById('manualArrowUndo').onclick=()=>{manualArrowPoints.pop();setManualArrowStatus();renderManualArrowDraft()};document.getElementById('manualArrowClear').onclick=()=>{manualArrowPoints=[];setManualArrowStatus();renderManualArrowDraft()};return;
+    }
     if(action==='text'){insertAtCursor('\n\n');setBlockTools(false);return}
     if(action==='separator'){insertAtCursor('\n[[sep]]\n');refreshBlockPreview();return}
     if(action==='image'){if(!document.getElementById('noteContent').value.includes('[[image]]'))insertAtCursor('\n[[image]]\n');document.getElementById('scanImageInput').click();refreshBlockPreview();return}
@@ -695,6 +740,12 @@
     }[action];if(!cfg)return;title.textContent=cfg.title;fields.innerHTML=cfg.html;box.classList.add('show');setTimeout(()=>document.getElementById('blockA')?.focus(),30);
   }
   function insertBuiltBlock(){
+    if(blockBuilderAction==='manualarrow'){
+      if(manualArrowPoints.length<2){toast('Marque pelo menos o início e o fim da seta');return}
+      const token=`[[manualarrow|${blockEncode({points:manualArrowPoints})}]]`;stopManualArrowDrawing(false);insertAtCursor(`
+${token}
+`);manualArrowPoints=[];document.getElementById('blockBuilder').classList.remove('show');document.getElementById('blockBuilderInsert').textContent='Inserir bloco';refreshBlockPreview();toast('Seta adicionada');return;
+    }
     const a=document.getElementById('blockA')?.value.trim()||'',b=document.getElementById('blockB')?.value.trim()||'';let token='';
     if(blockBuilderAction==='table'){
       const headers=a.split('|').map(v=>v.trim()).filter((v,i,arr)=>v||arr.some(Boolean));const rows=b.split(/\n+/).map(line=>line.split('|').map(v=>v.trim())).filter(r=>r.some(Boolean));if(!headers.length&&!rows.length){toast('Preencha a tabela');return}token=`[[table|${blockEncode({headers,rows})}]]`;
@@ -708,7 +759,7 @@
     if(token)insertAtCursor(`\n${token}\n`);document.getElementById('blockBuilder').classList.remove('show');refreshBlockPreview();
   }
   function openNote(type='note',existing=null,preselectBookId=''){
-    pendingScanDataUrl='';resetAttachmentUi();setBlockTools(false);
+    stopManualArrowDrawing();pendingScanDataUrl='';resetAttachmentUi();setBlockTools(false);
     const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';
     const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Página com foto'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';
     if(type==='formula')f.elements.content.placeholder='Fórmula:\n\nOnde:\n\nExemplo:\n\nQuando usar:';
@@ -837,8 +888,9 @@
   document.getElementById('formulaToggleBtn').onclick=()=>setFormulaTools(!document.getElementById('formulaTools').classList.contains('show'));
   document.getElementById('blockToggleBtn').onclick=()=>setBlockTools(!document.getElementById('blockTools').classList.contains('show'));
   document.querySelectorAll('[data-block-action]').forEach(btn=>btn.onclick=()=>openBlockBuilder(btn.dataset.blockAction));
-  document.getElementById('blockBuilderCancel').onclick=()=>document.getElementById('blockBuilder').classList.remove('show');
+  document.getElementById('blockBuilderCancel').onclick=()=>{stopManualArrowDrawing();document.getElementById('blockBuilder').classList.remove('show');document.getElementById('blockBuilderInsert').textContent='Inserir bloco'};
   document.getElementById('blockBuilderInsert').onclick=insertBuiltBlock;
+  document.getElementById('blockPreview').addEventListener('click',handleManualArrowTap);
   document.querySelectorAll('[data-formula-build]').forEach(btn=>btn.onclick=()=>openFormulaBuilder(btn.dataset.formulaBuild));
   document.querySelectorAll('[data-formula-symbol]').forEach(btn=>btn.onclick=()=>insertAtCursor(btn.dataset.formulaSymbol));
   document.getElementById('formulaBuilderCancel').onclick=()=>document.getElementById('formulaBuilder').classList.remove('show');
@@ -878,7 +930,7 @@
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
   let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
   document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=16').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=17').catch(()=>{}));
   renderAll();
 })();
 </script>
