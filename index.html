@@ -475,7 +475,9 @@
     return x.replace(/\n/g,'<br>');
   }
   function renderRichContent(raw='',noteObj=null,forNotebook=false){
-    let x=esc(String(raw));
+    // A seta manual é um elemento sobreposto: o token não pode criar uma linha/altura própria.
+    const source=String(raw).replace(/(^|\n)[ \t]*(\[\[manualarrow\|[^\]]+\]\])[ \t]*(?=\n|$)/g,(_,prefix,token)=>token);
+    let x=esc(source);
     x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,payload)=>{const t=blockDecode(payload,{headers:[],rows:[]}),headers=Array.isArray(t?.headers)?t.headers:[],rows=Array.isArray(t?.rows)?t.rows:[];if(!headers.length&&!rows.length)return'';const cols=Math.max(headers.length,...rows.map(r=>Array.isArray(r)?r.length:0),1);const head=headers.length?`<thead><tr>${Array.from({length:cols},(_,i)=>`<th>${renderInlineContent(headers[i]||'')}</th>`).join('')}</tr></thead>`:'';const body=`<tbody>${rows.map(r=>`<tr>${Array.from({length:cols},(_,i)=>`<td>${renderInlineContent((r||[])[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody>`;return `<div class="rich-table-wrap"><table class="rich-table">${head}${body}</table></div>`});
     x=x.replace(/\[\[box\|([^\]]+)\]\]/g,(_,payload)=>{const b=blockDecode(payload,{title:'',text:''});return `<div class="rich-callout">${b?.title?`<b>${renderInlineContent(b.title)}</b>`:''}<div class="rich-callout-body">${renderInlineContent(b?.text||'')}</div></div>`});
     x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,(_,payload)=>{const a=blockDecode(payload,{from:'',to:''});return `<span class="rich-link-spec" data-from="${esc(a?.from||'')}" data-to="${esc(a?.to||'')}"></span>`});
@@ -711,7 +713,7 @@
   }
   function renderManualArrowDraft(){
     const preview=document.getElementById('blockPreview');if(!preview||!manualArrowDrawing)return;preview.querySelector('.manual-arrow-draft-layer')?.remove();
-    const w=Math.max(1,preview.scrollWidth),h=Math.max(1,preview.scrollHeight),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('manual-arrow-draft-layer');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
+    const w=Math.max(1,preview.clientWidth),h=Math.max(1,preview.scrollHeight),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('manual-arrow-draft-layer');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
     const pts=manualArrowPoints.map(p=>({x:p.x*w,y:p.y*h}));
     if(pts.length>=2){const d=manualArrowPath(pts),shadow=document.createElementNS(ns,'path'),path=document.createElementNS(ns,'path'),end=pts[pts.length-1],prev=pts[pts.length-2],head=document.createElementNS(ns,'path');shadow.setAttribute('d',d);shadow.setAttribute('class','manual-arrow-draft-shadow');path.setAttribute('d',d);path.setAttribute('class','manual-arrow-draft-path');head.setAttribute('d',arrowHeadPath(end.x,end.y,prev.x,prev.y));head.setAttribute('class','rich-link-arrow-head');svg.append(shadow,path,head)}
     pts.forEach((p,i)=>{const c=document.createElementNS(ns,'circle');c.setAttribute('cx',String(p.x));c.setAttribute('cy',String(p.y));c.setAttribute('r',i===0?'5':'4.5');c.setAttribute('class',`manual-arrow-point${i===0?' start':''}`);svg.appendChild(c);const t=document.createElementNS(ns,'text');t.setAttribute('x',String(p.x+7));t.setAttribute('y',String(p.y-7));t.setAttribute('class','manual-arrow-point-label');t.textContent=String(i+1);svg.appendChild(t)});preview.appendChild(svg);
@@ -719,7 +721,7 @@
   function beginManualArrowDrawing(){manualArrowDrawing=true;manualArrowPoints=[];document.getElementById('blockPreview')?.classList.add('manual-arrow-draw-mode');setManualArrowStatus();renderManualArrowDraft()}
   function stopManualArrowDrawing(clear=true){manualArrowDrawing=false;if(clear)manualArrowPoints=[];const preview=document.getElementById('blockPreview');preview?.classList.remove('manual-arrow-draw-mode');preview?.querySelector('.manual-arrow-draft-layer')?.remove()}
   function handleManualArrowTap(e){
-    if(!manualArrowDrawing)return;const preview=document.getElementById('blockPreview');if(!preview)return;e.preventDefault();e.stopPropagation();const rect=preview.getBoundingClientRect(),w=Math.max(1,preview.scrollWidth),h=Math.max(1,preview.scrollHeight);let x=(e.clientX-rect.left+preview.scrollLeft)/w,y=(e.clientY-rect.top+preview.scrollTop)/h;x=Math.max(0,Math.min(1,x));y=Math.max(0,Math.min(1,y));manualArrowPoints.push({x:+x.toFixed(5),y:+y.toFixed(5)});setManualArrowStatus();renderManualArrowDraft();
+    if(!manualArrowDrawing)return;const preview=document.getElementById('blockPreview');if(!preview)return;e.preventDefault();e.stopPropagation();const rect=preview.getBoundingClientRect(),w=Math.max(1,preview.clientWidth),h=Math.max(1,preview.scrollHeight);let x=(e.clientX-rect.left)/w,y=(e.clientY-rect.top+preview.scrollTop)/h;x=Math.max(0,Math.min(1,x));y=Math.max(0,Math.min(1,y));manualArrowPoints.push({x:+x.toFixed(5),y:+y.toFixed(5)});setManualArrowStatus();renderManualArrowDraft();
   }
   function setBlockTools(open){
     const tools=document.getElementById('blockTools');if(!tools)return;tools.classList.toggle('show',!!open);if(open)refreshBlockPreview();else{document.getElementById('blockBuilder')?.classList.remove('show');stopManualArrowDrawing();}
@@ -742,9 +744,10 @@
   function insertBuiltBlock(){
     if(blockBuilderAction==='manualarrow'){
       if(manualArrowPoints.length<2){toast('Marque pelo menos o início e o fim da seta');return}
-      const token=`[[manualarrow|${blockEncode({points:manualArrowPoints})}]]`;stopManualArrowDrawing(false);insertAtCursor(`
-${token}
-`);manualArrowPoints=[];document.getElementById('blockBuilder').classList.remove('show');document.getElementById('blockBuilderInsert').textContent='Inserir bloco';refreshBlockPreview();toast('Seta adicionada');return;
+      const token=`[[manualarrow|${blockEncode({points:manualArrowPoints})}]]`;
+      // Guarda o token no fim do conteúdo, sem que ele ocupe uma linha visual.
+      const area=document.getElementById('noteContent');stopManualArrowDrawing(false);area.value+=token;area.selectionStart=area.selectionEnd=area.value.length;
+      manualArrowPoints=[];document.getElementById('blockBuilder').classList.remove('show');document.getElementById('blockBuilderInsert').textContent='Inserir bloco';refreshBlockPreview();toast('Seta adicionada');return;
     }
     const a=document.getElementById('blockA')?.value.trim()||'',b=document.getElementById('blockB')?.value.trim()||'';let token='';
     if(blockBuilderAction==='table'){
@@ -930,7 +933,7 @@ ${token}
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
   let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
   document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=17').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=18').catch(()=>{}));
   renderAll();
 })();
 </script>
