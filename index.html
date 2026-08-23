@@ -224,11 +224,11 @@
     .block-preview-wrap{margin-top:10px}.block-preview-label{display:block;color:var(--muted);font-size:9px;font-weight:800;margin-bottom:5px}.block-preview{min-height:62px;padding:12px;border:1px dashed rgba(102,116,232,.25);border-radius:12px;background:white;line-height:1.65;font-size:13px;overflow-x:auto}
     .rich-table-wrap{overflow-x:auto;margin:12px 0}.rich-table{width:100%;border-collapse:collapse;background:white;font-size:.94em}.rich-table th,.rich-table td{border:1px solid #d9deea;padding:8px 9px;text-align:left;vertical-align:top;min-width:78px}.rich-table th{background:#eef1ff;color:#3d4e9d;font-weight:850}
     .rich-callout{margin:12px 0;padding:12px 13px;border-radius:13px;background:#f3f5ff;border:1px solid rgba(102,116,232,.20);border-left:4px solid var(--primary)}.rich-callout b{display:block;margin-bottom:4px}.rich-callout-body{white-space:normal}
-    .rich-arrow{margin:14px 0;padding:12px 14px;border-radius:14px;background:#fafbff;border:1px solid var(--line);font-weight:750;text-align:center;overflow:hidden}.rich-arrow .side{font-size:12px;line-height:1.35}.rich-arrow .side.from{margin-bottom:2px}.rich-arrow .side.to{margin-top:2px}.rich-arrow-drawing{display:block;width:min(290px,100%);height:78px;margin:0 auto;color:var(--primary);overflow:visible}.rich-arrow-drawing path{fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.rich-arrow-drawing .sketch2{opacity:.22;stroke-width:1.4;transform:translate(1px,1px)}.rich-arrow-drawing .arrow-head{fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+    .rich-link-scope{position:relative}.rich-link-spec{display:none!important}.rich-link-anchor{position:relative;z-index:4}.rich-link-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:3}.rich-link-path{fill:none;stroke:var(--primary);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}.rich-link-path-shadow{fill:none;stroke:rgba(102,116,232,.18);stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round}.rich-link-dot{fill:var(--primary)}
     .rich-group{display:grid;grid-template-columns:20px 1fr;gap:8px;margin:12px 0}.rich-brace{font-family:Georgia,serif;font-size:58px;line-height:.9;color:var(--primary);display:flex;align-items:center;justify-content:center;transform:scaleY(1.25)}.rich-group-title{font-weight:850;margin-bottom:5px}.rich-group-items{display:grid;gap:4px}.rich-group-item{padding:3px 0;border-bottom:1px dashed rgba(104,113,135,.18)}
     .rich-separator{height:1px;background:linear-gradient(90deg,transparent,#b7bed4,transparent);margin:18px 0}
     .rich-image-placeholder{margin:12px 0;padding:14px;text-align:center;border:1px dashed #cfd5e6;border-radius:13px;color:var(--muted);background:#fafbff;font-size:11px}
-    @media(max-width:370px){.block-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.rich-arrow-drawing{height:72px}}
+    @media(max-width:370px){.block-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body class="auth-locked">
@@ -384,7 +384,7 @@
         <button type="button" class="block-tool" data-block-action="text"><span>📝</span>Texto</button>
         <button type="button" class="block-tool" data-block-action="table"><span>▦</span>Tabela</button>
         <button type="button" class="block-tool" data-block-action="callout"><span>📌</span>Caixa</button>
-        <button type="button" class="block-tool" data-block-action="arrow"><span>↪</span>Seta</button>
+        <button type="button" class="block-tool" data-block-action="arrow"><span>↗</span>Ligar</button>
         <button type="button" class="block-tool" data-block-action="group"><span>{</span>Agrupar</button>
         <button type="button" class="block-tool" data-block-action="separator"><span>—</span>Separador</button>
         <button type="button" class="block-tool" data-block-action="image"><span>📎</span>Imagem</button>
@@ -476,7 +476,7 @@
     let x=esc(String(raw));
     x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,payload)=>{const t=blockDecode(payload,{headers:[],rows:[]}),headers=Array.isArray(t?.headers)?t.headers:[],rows=Array.isArray(t?.rows)?t.rows:[];if(!headers.length&&!rows.length)return'';const cols=Math.max(headers.length,...rows.map(r=>Array.isArray(r)?r.length:0),1);const head=headers.length?`<thead><tr>${Array.from({length:cols},(_,i)=>`<th>${renderInlineContent(headers[i]||'')}</th>`).join('')}</tr></thead>`:'';const body=`<tbody>${rows.map(r=>`<tr>${Array.from({length:cols},(_,i)=>`<td>${renderInlineContent((r||[])[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody>`;return `<div class="rich-table-wrap"><table class="rich-table">${head}${body}</table></div>`});
     x=x.replace(/\[\[box\|([^\]]+)\]\]/g,(_,payload)=>{const b=blockDecode(payload,{title:'',text:''});return `<div class="rich-callout">${b?.title?`<b>${renderInlineContent(b.title)}</b>`:''}<div class="rich-callout-body">${renderInlineContent(b?.text||'')}</div></div>`});
-    x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,(_,payload)=>{const a=blockDecode(payload,{from:'',to:''});return `<div class="rich-arrow"><div class="side from">${renderInlineContent(a?.from||'')}</div><svg class="rich-arrow-drawing" viewBox="0 0 280 80" role="img" aria-label="Seta curva"><path class="sketch2" d="M22 12 C64 10 66 54 119 57 C165 60 177 34 236 35"></path><path d="M20 10 C62 8 64 52 118 55 C164 58 176 32 238 33"></path><path class="arrow-head" d="M226 24 L239 33 L227 43"></path></svg><div class="side to">${renderInlineContent(a?.to||'')}</div></div>`});
+    x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,(_,payload)=>{const a=blockDecode(payload,{from:'',to:''});return `<span class="rich-link-spec" data-from="${esc(a?.from||'')}" data-to="${esc(a?.to||'')}"></span>`});
     x=x.replace(/\[\[group\|([^\]]+)\]\]/g,(_,payload)=>{const g=blockDecode(payload,{title:'',items:[]}),items=Array.isArray(g?.items)?g.items:[];return `<div class="rich-group"><div class="rich-brace">{</div><div>${g?.title?`<div class="rich-group-title">${renderInlineContent(g.title)}</div>`:''}<div class="rich-group-items">${items.map(v=>`<div class="rich-group-item">${renderInlineContent(v)}</div>`).join('')}</div></div></div>`});
     x=x.replace(/\[\[sep\]\]/g,'<div class="rich-separator"></div>');
     x=x.replace(/\[\[image\]\]/g,()=>noteObj?noteImageHtml(noteObj,forNotebook):'<div class="rich-image-placeholder">📎 Imagem anexada aparecerá aqui.</div>');
@@ -486,10 +486,42 @@
     x=x.replace(/\[\[sub\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-sub">${formulaPart(a)}<sub>${formulaPart(b)}</sub></span>`);
     return x.replace(/\n/g,'<br>');
   }
+  function unwrapRichLinkAnchors(container){
+    container.querySelectorAll('.rich-link-anchor').forEach(el=>el.replaceWith(document.createTextNode(el.textContent||'')));
+    container.normalize();
+  }
+  function wrapFirstTextMatch(container,query,role,index){
+    query=String(query||'').trim();if(!query)return null;
+    const walker=document.createTreeWalker(container,NodeFilter.SHOW_TEXT);let node;const needle=query.toLocaleLowerCase('pt-BR');
+    while((node=walker.nextNode())){
+      if(!node.parentElement||node.parentElement.closest('.rich-link-spec,.rich-link-layer'))continue;
+      const value=node.nodeValue||'',pos=value.toLocaleLowerCase('pt-BR').indexOf(needle);if(pos<0)continue;
+      const before=value.slice(0,pos),match=value.slice(pos,pos+query.length),after=value.slice(pos+query.length),span=document.createElement('span');
+      span.className='rich-link-anchor';span.dataset.linkRole=role;span.dataset.linkIndex=String(index);span.textContent=match;
+      const frag=document.createDocumentFragment();if(before)frag.appendChild(document.createTextNode(before));frag.appendChild(span);if(after)frag.appendChild(document.createTextNode(after));node.replaceWith(frag);return span;
+    }
+    return null;
+  }
+  function connectorPath(sx,sy,ex,ey){
+    const dy=ey-sy,dx=ex-sx;
+    if(Math.abs(dy)<34){const bend=Math.max(28,Math.min(90,Math.abs(dx)*.35));const sign=dx>=0?1:-1;return `M ${sx} ${sy} C ${sx+sign*bend} ${sy-24}, ${ex-sign*bend} ${ey-24}, ${ex} ${ey}`;}
+    const down=dy>=0?1:-1,step=Math.max(20,Math.min(48,Math.abs(dy)*.28)),side=dx>=0?1:-1,midY=sy+down*step,nearX=ex-side*22;
+    return `M ${sx} ${sy} C ${sx} ${sy+down*10}, ${sx} ${midY- down*6}, ${sx+side*10} ${midY} L ${nearX} ${midY} Q ${ex-side*8} ${midY}, ${ex-side*8} ${midY+down*10} L ${ex-side*8} ${ey-down*8} Q ${ex-side*8} ${ey}, ${ex} ${ey}`;
+  }
+  function drawRichLinks(container){
+    if(!container||!container.isConnected)return;container.classList.add('rich-link-scope');container.querySelector('.rich-link-layer')?.remove();unwrapRichLinkAnchors(container);
+    const specs=[...container.querySelectorAll('.rich-link-spec')];if(!specs.length)return;
+    const pairs=[];specs.forEach((spec,i)=>{const from=spec.dataset.from||'',to=spec.dataset.to||'';const a=wrapFirstTextMatch(container,from,'from',i),b=wrapFirstTextMatch(container,to,'to',i);if(a&&b)pairs.push({a,b,i});});if(!pairs.length)return;
+    const base=container.getBoundingClientRect(),w=Math.max(container.scrollWidth,container.clientWidth),h=Math.max(container.scrollHeight,container.clientHeight),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.classList.add('rich-link-layer');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
+    const defs=document.createElementNS(ns,'defs');const marker=document.createElementNS(ns,'marker');marker.setAttribute('id','richArrowHead'+Math.random().toString(36).slice(2));marker.setAttribute('markerWidth','8');marker.setAttribute('markerHeight','8');marker.setAttribute('refX','6.8');marker.setAttribute('refY','4');marker.setAttribute('orient','auto');marker.setAttribute('markerUnits','strokeWidth');const poly=document.createElementNS(ns,'path');poly.setAttribute('d','M0,0 L8,4 L0,8');poly.setAttribute('fill','none');poly.setAttribute('stroke','currentColor');poly.setAttribute('stroke-width','1.7');poly.setAttribute('stroke-linecap','round');poly.setAttribute('stroke-linejoin','round');marker.appendChild(poly);defs.appendChild(marker);svg.appendChild(defs);
+    const markerId=marker.id;pairs.forEach(({a,b})=>{const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect(),targetLeft=br.left-base.left,sourceLeft=ar.left-base.left;let sx,sy,ex,ey;if(br.top>=ar.bottom-4){sx=sourceLeft+ar.width*.5;sy=ar.bottom-base.top+2;const approachFromLeft=targetLeft+br.width*.5 < sx;ex=approachFromLeft?targetLeft-3:targetLeft+br.width+3;ey=br.top-base.top+br.height*.55;}else if(br.bottom<=ar.top+4){sx=sourceLeft+ar.width*.5;sy=ar.top-base.top-2;const approachFromLeft=targetLeft+br.width*.5 < sx;ex=approachFromLeft?targetLeft-3:targetLeft+br.width+3;ey=br.top-base.top+br.height*.55;}else{const goRight=targetLeft>sourceLeft;sx=goRight?ar.right-base.left+2:ar.left-base.left-2;sy=ar.top-base.top+ar.height*.55;ex=goRight?br.left-base.left-3:br.right-base.left+3;ey=br.top-base.top+br.height*.55;}const d=connectorPath(sx,sy,ex,ey);const shadow=document.createElementNS(ns,'path');shadow.setAttribute('d',d);shadow.setAttribute('class','rich-link-path-shadow');const path=document.createElementNS(ns,'path');path.setAttribute('d',d);path.setAttribute('class','rich-link-path');path.setAttribute('marker-end',`url(#${markerId})`);const dot=document.createElementNS(ns,'circle');dot.setAttribute('cx',String(sx));dot.setAttribute('cy',String(sy));dot.setAttribute('r','2.7');dot.setAttribute('class','rich-link-dot');svg.append(shadow,path,dot);});container.prepend(svg);
+  }
+  function scheduleRichLinks(container){requestAnimationFrame(()=>requestAnimationFrame(()=>drawRichLinks(container)))}
   function plainContent(raw=''){
     let x=String(raw);
     x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,p)=>{const t=blockDecode(p,{headers:[],rows:[]});return [...(t.headers||[]),...(t.rows||[]).flat()].join(' ')});
-    x=x.replace(/\[\[(?:box|arrow|group)\|([^\]]+)\]\]/g,(_,p)=>{const o=blockDecode(p,{});return Object.values(o||{}).flat().join(' ')});
+    x=x.replace(/\[\[(?:box|group)\|([^\]]+)\]\]/g,(_,p)=>{const o=blockDecode(p,{});return Object.values(o||{}).flat().join(' ')});
+    x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,' ');
     x=x.replace(/\[\[(?:frac|pow|sub)\|([^|\]]*)\|([^\]]*)\]\]/g,'$1 $2').replace(/\[\[root\|([^\]]*)\]\]/g,'$1').replace(/\[\[(?:sep|image)\]\]/g,' ');
     return x;
   }
@@ -589,7 +621,7 @@
   }
   function refreshBlockPreview(){
     const area=document.getElementById('noteContent'),preview=document.getElementById('blockPreview');if(!area||!preview)return;
-    preview.innerHTML=area.value.trim()?renderRichContent(area.value):'<span style="color:var(--muted)">O conteúdo da página aparecerá aqui.</span>';
+    preview.innerHTML=area.value.trim()?renderRichContent(area.value):'<span style="color:var(--muted)">O conteúdo da página aparecerá aqui.</span>';scheduleRichLinks(preview);
   }
   function setBlockTools(open){
     const tools=document.getElementById('blockTools');if(!tools)return;tools.classList.toggle('show',!!open);if(open)refreshBlockPreview();else document.getElementById('blockBuilder')?.classList.remove('show');
@@ -602,7 +634,7 @@
     const cfg={
       table:{title:'▦ Tabela',html:'<div class="field"><label>Cabeçalhos <small>(separe as colunas com |)</small></label><input id="blockA" placeholder="Ex.: + | - | ? | WH?"></div><div class="field"><label>Linhas <small>(uma linha por linha; colunas com |)</small></label><textarea id="blockB" placeholder="I am | I am not | Am I? | — am I\\nYou are | You are not | Are you? | — are you"></textarea></div>'},
       callout:{title:'📌 Caixa de observação',html:'<div class="field"><label>Título (opcional)</label><input id="blockA" placeholder="Ex.: Importante"></div><div class="field"><label>Texto</label><textarea id="blockB" placeholder="Escreva a observação..."></textarea></div>'},
-      arrow:{title:'↪ Seta desenhada',html:'<div class="notice soft" style="margin-bottom:9px"><b>Seta curva</b>A seta será desenhada como um traço curvo, parecida com as setas feitas à mão no caderno.</div><div class="field"><label>De</label><input id="blockA" placeholder="Ex.: Verbo to be"></div><div class="field"><label>Para</label><input id="blockB" placeholder="Ex.: WH Questions"></div>'},
+      arrow:{title:'↗ Ligar duas palavras',html:'<div class="notice soft" style="margin-bottom:9px"><b>Linha de ligação</b>Digite exatamente o texto que já aparece na página. O app desenha uma linha curva saindo da palavra de origem e chegando na palavra de destino.</div><div class="field"><label>Palavra/texto de origem</label><input id="blockA" placeholder="Ex.: WH?"></div><div class="field"><label>Palavra/texto de destino</label><input id="blockB" placeholder="Ex.: WH Questions"></div>'},
       group:{title:'{ Agrupamento',html:'<div class="field"><label>Título (opcional)</label><input id="blockA" placeholder="Ex.: Pronomes"></div><div class="field"><label>Itens <small>(um por linha)</small></label><textarea id="blockB" placeholder="I = eu\\nYou = você\\nHe = ele"></textarea></div>'}
     }[action];if(!cfg)return;title.textContent=cfg.title;fields.innerHTML=cfg.html;box.classList.add('show');setTimeout(()=>document.getElementById('blockA')?.focus(),30);
   }
@@ -613,7 +645,7 @@
     }else if(blockBuilderAction==='callout'){
       if(!a&&!b){toast('Escreva a caixa de observação');return}token=`[[box|${blockEncode({title:a,text:b})}]]`;
     }else if(blockBuilderAction==='arrow'){
-      if(!a||!b){toast('Preencha os dois lados da seta');return}token=`[[arrow|${blockEncode({from:a,to:b})}]]`;
+      if(!a||!b){toast('Informe o texto de origem e o de destino');return}token=`[[arrow|${blockEncode({from:a,to:b})}]]`;
     }else if(blockBuilderAction==='group'){
       const items=b.split(/\n+/).map(v=>v.trim()).filter(Boolean);if(!a&&!items.length){toast('Adicione itens ao agrupamento');return}token=`[[group|${blockEncode({title:a,items})}]]`;
     }
@@ -710,22 +742,22 @@
   }
   function viewNote(n){
     n.lastOpenedAt=Date.now();persistLocal();const page=n.bookId&&Number(n.pageOrder)>0?`<span class="pill">📄 Página ${Number(n.pageOrder)}</span>`:'';
-    const hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${page}${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div><div style="white-space:normal;line-height:1.65">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div>${hasImageBlock?'':noteImageHtml(n)}${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal')
+    const hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${page}${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div><div style="white-space:normal;line-height:1.65">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div>${hasImageBlock?'':noteImageHtml(n)}${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal');scheduleRichLinks(document.getElementById('viewBody'))
   }
   function openBook(id){
     const b=data.books.find(x=>x.id===id);if(!b)return;show('books');const notes=orderedBookNotes(id);
     document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p><div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Nova página com foto</button></div><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
     renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('note',null,id)
   }
-  function openNotebook(bookId,index=0){notebookState={bookId,index};renderNotebookPage();openModal('notebookModal')}
+  function openNotebook(bookId,index=0){notebookState={bookId,index};renderNotebookPage();openModal('notebookModal');scheduleRichLinks(document.getElementById('notebookPaper'))}
   function renderNotebookPage(){
     const b=data.books.find(x=>x.id===notebookState.bookId),notes=orderedBookNotes(notebookState.bookId),paper=document.getElementById('notebookPaper');if(!b){closeModals();return}
     notebookState.index=Math.max(0,Math.min(notebookState.index,Math.max(0,notes.length-1)));document.getElementById('notebookTitle').textContent=`${b.emoji||'📘'} ${b.name}`;document.getElementById('notebookBookName').textContent='Modo caderno · ordem das páginas';
     if(!notes.length){document.getElementById('notebookPageLabel').textContent='Caderno vazio';document.getElementById('notebookCount').textContent='0 / 0';paper.innerHTML='<div class="notebook-empty">Digitalize ou crie a primeira página deste caderno.</div>';document.getElementById('prevNotebookPage').disabled=true;document.getElementById('nextNotebookPage').disabled=true;document.getElementById('editNotebookPageBtn').disabled=true;return}
-    const n=notes[notebookState.index],pageNo=notebookState.index+1,hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('notebookPageLabel').textContent=`Página ${pageNo}`;document.getElementById('notebookCount').textContent=`${pageNo} / ${notes.length}`;paper.innerHTML=`<div class="notebook-page-title">${esc(n.title)}</div><div class="notebook-page-text">${renderRichContent(n.content||'Sem texto nesta página.',n,true)}</div>${hasImageBlock?'':noteImageHtml(n,true)}`;document.getElementById('prevNotebookPage').disabled=notebookState.index<=0;document.getElementById('nextNotebookPage').disabled=notebookState.index>=notes.length-1;document.getElementById('editNotebookPageBtn').disabled=false;
+    const n=notes[notebookState.index],pageNo=notebookState.index+1,hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('notebookPageLabel').textContent=`Página ${pageNo}`;document.getElementById('notebookCount').textContent=`${pageNo} / ${notes.length}`;paper.innerHTML=`<div class="notebook-page-title">${esc(n.title)}</div><div class="notebook-page-text">${renderRichContent(n.content||'Sem texto nesta página.',n,true)}</div>${hasImageBlock?'':noteImageHtml(n,true)}`;document.getElementById('prevNotebookPage').disabled=notebookState.index<=0;document.getElementById('nextNotebookPage').disabled=notebookState.index>=notes.length-1;document.getElementById('editNotebookPageBtn').disabled=false;scheduleRichLinks(paper);
   }
   function runSearch(q){q=(q||'').trim().toLowerCase();const out=q?data.notes.filter(n=>[n.title,plainContent(n.content),n.source,bookName(n.bookId),...(n.tags||[])].join(' ').toLowerCase().includes(q)):[];renderList('searchResults',out,q?'Nenhum resultado encontrado.':'Digite algo para pesquisar em todo o seu caderno.')}
-  function renderReview(){const box=document.getElementById('reviewBox');const pool=data.notes.filter(n=>n.favorite||n.pinned);if(!data.settings.review){box.innerHTML=empty('A revisão está desativada nos ajustes.');return}if(!pool.length){box.innerHTML=empty('Favorite ou fixe algumas anotações para começar a revisão.');return}const n=pool[Math.floor(Math.random()*pool.length)];box.innerHTML=`<div class="review-card"><div style="font-size:30px">🧠</div><div class="q">O que você lembra sobre “${esc(n.title)}”?</div><p style="color:var(--muted)">Tente responder de cabeça antes de revelar.</p><div class="answer" id="reviewAnswer">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div><button class="primary" id="showAnswer">Mostrar resposta</button> <button class="secondary" id="nextReview">Outra</button></div>`;document.getElementById('showAnswer').onclick=()=>document.getElementById('reviewAnswer').classList.add('show');document.getElementById('nextReview').onclick=renderReview}
+  function renderReview(){const box=document.getElementById('reviewBox');const pool=data.notes.filter(n=>n.favorite||n.pinned);if(!data.settings.review){box.innerHTML=empty('A revisão está desativada nos ajustes.');return}if(!pool.length){box.innerHTML=empty('Favorite ou fixe algumas anotações para começar a revisão.');return}const n=pool[Math.floor(Math.random()*pool.length)];box.innerHTML=`<div class="review-card"><div style="font-size:30px">🧠</div><div class="q">O que você lembra sobre “${esc(n.title)}”?</div><p style="color:var(--muted)">Tente responder de cabeça antes de revelar.</p><div class="answer" id="reviewAnswer">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div><button class="primary" id="showAnswer">Mostrar resposta</button> <button class="secondary" id="nextReview">Outra</button></div>`;document.getElementById('showAnswer').onclick=()=>{const ans=document.getElementById('reviewAnswer');ans.classList.add('show');scheduleRichLinks(ans)};document.getElementById('nextReview').onclick=renderReview}
   function updateCloud(){const status=window.FirebaseBridge?.status?.()||{configured:true,connected:false,label:navigator.onLine?'Conectando...':'Offline'};const connected=!!status.connected;document.getElementById('cloudText').textContent=status.label||'Firebase';document.getElementById('cloudDot').classList.toggle('ok',connected);document.getElementById('firebaseSettingText').textContent=connected?'Textos sincronizados · imagens locais':(navigator.onLine?'Aguardando sincronização dos textos':'Offline · textos sincronizam quando voltar');document.getElementById('accountEmail').textContent=activeEmail||'Conta';document.getElementById('firebaseAccountEmail').textContent=activeEmail||'Conta';document.getElementById('firebaseModalStatus').textContent=status.label||'Verificando...';document.getElementById('firebaseModalDot').classList.toggle('ok',connected)}
   function setAuthMessage(msg=''){document.getElementById('authMessage').textContent=msg}
   function authError(err){const code=err?.code||'';return ({'auth/invalid-credential':'E-mail ou senha incorretos.','auth/email-already-in-use':'Este e-mail já possui uma conta.','auth/weak-password':'Escolha uma senha mais forte.','auth/invalid-email':'Digite um e-mail válido.','auth/too-many-requests':'Muitas tentativas. Tente novamente mais tarde.','auth/network-request-failed':'Sem conexão com a internet.','auth/user-disabled':'Esta conta foi desativada.'})[code]||'Não foi possível concluir. Verifique os dados e tente novamente.'}
@@ -788,6 +820,8 @@
   window.addEventListener('firebase-sync-start',updateCloud);window.addEventListener('firebase-sync-end',updateCloud);
   window.addEventListener('online',async()=>{updateCloud();if(activeUid&&window.FirebaseBridge?.status?.().connected)await reconcileCloud()});
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
+  let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
+  document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
   if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
   renderAll();
 })();
