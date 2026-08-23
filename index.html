@@ -213,6 +213,22 @@
     .formula-preview-wrap{margin-top:10px}.formula-preview-label{display:block;color:var(--muted);font-size:9px;font-weight:800;margin-bottom:5px}.formula-preview{min-height:62px;padding:12px;border:1px dashed rgba(102,116,232,.25);border-radius:12px;background:white;line-height:1.75;font-size:14px;overflow-x:auto}
     .math-frac{display:inline-flex;vertical-align:middle;flex-direction:column;align-items:stretch;text-align:center;line-height:1.12;margin:0 .16em;min-width:1.2em}.math-frac .num{padding:0 .22em .12em;border-bottom:1.6px solid currentColor}.math-frac .den{padding:.12em .22em 0}.math-pow sup,.math-sub sub{font-size:.72em;line-height:0}.math-root{display:inline-flex;align-items:flex-start;vertical-align:middle}.math-root-sign{font-size:1.28em;line-height:1}.math-root-body{border-top:1.5px solid currentColor;padding:0 .16em;line-height:1.12}.math-expression{font-family:Cambria Math,"Times New Roman",serif;font-size:1.08em;letter-spacing:.01em}.notebook-page-text .math-expression,.answer .math-expression{font-size:1.05em}
     @media(max-width:370px){.formula-toolbar{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+    /* Blocos estruturados da página */
+    .editor-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .block-toggle{border:1px solid rgba(102,116,232,.18);background:#fff;color:#5363dc;border-radius:10px;padding:7px 10px;font-size:10px;font-weight:850}
+    .block-tools{display:none;margin-top:9px;padding:12px;background:#f8f9fc;border:1px solid #e1e5ed;border-radius:14px}.block-tools.show{display:block}
+    .block-tools-head b{font-size:12px}.block-tools-head small{display:block;color:var(--muted);font-size:9px;line-height:1.4;margin-top:2px}
+    .block-toolbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}.block-tool{min-width:0;min-height:54px;border:1px solid var(--line);border-radius:11px;background:white;color:var(--text);font-weight:800;font-size:9px;padding:7px 3px;line-height:1.15}.block-tool span{display:block;font-size:18px;margin-bottom:3px}
+    .block-builder{display:none;margin-top:9px;padding:10px;background:white;border:1px solid var(--line);border-radius:12px}.block-builder.show{display:block}.block-builder-title{font-size:11px;font-weight:850;margin-bottom:8px}.block-builder textarea{min-height:86px}
+    .block-preview-wrap{margin-top:10px}.block-preview-label{display:block;color:var(--muted);font-size:9px;font-weight:800;margin-bottom:5px}.block-preview{min-height:62px;padding:12px;border:1px dashed rgba(102,116,232,.25);border-radius:12px;background:white;line-height:1.65;font-size:13px;overflow-x:auto}
+    .rich-table-wrap{overflow-x:auto;margin:12px 0}.rich-table{width:100%;border-collapse:collapse;background:white;font-size:.94em}.rich-table th,.rich-table td{border:1px solid #d9deea;padding:8px 9px;text-align:left;vertical-align:top;min-width:78px}.rich-table th{background:#eef1ff;color:#3d4e9d;font-weight:850}
+    .rich-callout{margin:12px 0;padding:12px 13px;border-radius:13px;background:#f3f5ff;border:1px solid rgba(102,116,232,.20);border-left:4px solid var(--primary)}.rich-callout b{display:block;margin-bottom:4px}.rich-callout-body{white-space:normal}
+    .rich-arrow{display:flex;align-items:center;justify-content:center;gap:9px;margin:12px 0;padding:10px;border-radius:12px;background:#fafbff;border:1px solid var(--line);font-weight:750}.rich-arrow .arr{color:var(--primary);font-size:20px;font-weight:900}.rich-arrow .side{flex:1;text-align:center}
+    .rich-group{display:grid;grid-template-columns:20px 1fr;gap:8px;margin:12px 0}.rich-brace{font-family:Georgia,serif;font-size:58px;line-height:.9;color:var(--primary);display:flex;align-items:center;justify-content:center;transform:scaleY(1.25)}.rich-group-title{font-weight:850;margin-bottom:5px}.rich-group-items{display:grid;gap:4px}.rich-group-item{padding:3px 0;border-bottom:1px dashed rgba(104,113,135,.18)}
+    .rich-separator{height:1px;background:linear-gradient(90deg,transparent,#b7bed4,transparent);margin:18px 0}
+    .rich-image-placeholder{margin:12px 0;padding:14px;text-align:center;border:1px dashed #cfd5e6;border-radius:13px;color:var(--muted);background:#fafbff;font-size:11px}
+    @media(max-width:370px){.block-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}.rich-arrow{flex-direction:column}.rich-arrow .arr{transform:rotate(90deg)}}
 </style>
 </head>
 <body class="auth-locked">
@@ -345,7 +361,7 @@
 <div class="modal-wrap" id="noteModal"><div class="modal"><div class="modal-head"><h2 id="noteModalTitle">Nova anotação</h2><button class="close" data-close>✕</button></div><form class="form" id="noteForm"><input type="hidden" name="id" /><input type="hidden" name="type" value="note" />
   <div class="field"><label>Título</label><input name="title" placeholder="Ex.: Juros compostos" required /></div>
   <div class="field"><label>Caderno</label><select name="bookId" id="bookSelect"></select><div class="page-hint" id="scanPageHint"></div></div>
-  <div class="field"><div class="field-label-row"><label id="contentLabel">Conteúdo</label><button type="button" class="formula-toggle" id="formulaToggleBtn">ƒ Inserir fórmula</button></div><textarea name="content" id="noteContent" placeholder="Escreva o que você quer lembrar..."></textarea>
+  <div class="field"><div class="field-label-row"><label id="contentLabel">Conteúdo</label><div class="editor-actions"><button type="button" class="formula-toggle" id="formulaToggleBtn">ƒ Fórmula</button><button type="button" class="block-toggle" id="blockToggleBtn">＋ Bloco</button></div></div><textarea name="content" id="noteContent" placeholder="Escreva o que você quer lembrar..."></textarea>
     <div class="formula-tools" id="formulaTools">
       <div class="formula-tools-head"><div><b>ƒ Editor de fórmulas</b><small>Monte a fórmula e ela aparecerá formatada ao visualizar a anotação.</small></div></div>
       <div class="formula-toolbar">
@@ -361,6 +377,20 @@
       <div class="formula-builder" id="formulaBuilder"><div class="formula-builder-title" id="formulaBuilderTitle">Fração</div><div id="formulaBuilderFields"></div><div class="row"><button type="button" class="secondary" id="formulaBuilderCancel">Cancelar</button><button type="button" class="primary" id="formulaBuilderInsert">Inserir</button></div></div>
       <div class="formula-tip">Dica: dentro dos campos, use <code>^t</code> para potência e <code>_n</code> para índice. Ex.: na sua fórmula de investimento, em cima pode ser <code>C × ((1+i)^t - 1)</code> e embaixo <code>i</code>.</div>
       <div class="formula-preview-wrap"><span class="formula-preview-label">PRÉ-VISUALIZAÇÃO</span><div class="formula-preview" id="formulaPreview">A fórmula aparecerá aqui.</div></div>
+    </div>
+    <div class="block-tools" id="blockTools">
+      <div class="block-tools-head"><b>＋ Blocos da página</b><small>Monte tabelas, caixas, setas e agrupamentos. Tudo isso sincroniza junto com o texto.</small></div>
+      <div class="block-toolbar">
+        <button type="button" class="block-tool" data-block-action="text"><span>📝</span>Texto</button>
+        <button type="button" class="block-tool" data-block-action="table"><span>▦</span>Tabela</button>
+        <button type="button" class="block-tool" data-block-action="callout"><span>📌</span>Caixa</button>
+        <button type="button" class="block-tool" data-block-action="arrow"><span>➜</span>Seta</button>
+        <button type="button" class="block-tool" data-block-action="group"><span>{</span>Agrupar</button>
+        <button type="button" class="block-tool" data-block-action="separator"><span>—</span>Separador</button>
+        <button type="button" class="block-tool" data-block-action="image"><span>📎</span>Imagem</button>
+      </div>
+      <div class="block-builder" id="blockBuilder"><div class="block-builder-title" id="blockBuilderTitle">Bloco</div><div id="blockBuilderFields"></div><div class="row"><button type="button" class="secondary" id="blockBuilderCancel">Cancelar</button><button type="button" class="primary" id="blockBuilderInsert">Inserir bloco</button></div></div>
+      <div class="block-preview-wrap"><span class="block-preview-label">PRÉ-VISUALIZAÇÃO DA PÁGINA</span><div class="block-preview" id="blockPreview">O conteúdo da página aparecerá aqui.</div></div>
     </div>
   </div>
   <div class="field" id="scanCaptureField">
@@ -422,7 +452,7 @@
   const IMAGE_STORE='images';
   const defaultData=()=>({version:4,books:[],notes:[],settings:{review:true},updatedAt:0});
   let activeUid=null, activeEmail='', data=defaultData(), currentView='home', syncBusy=false, notebookState={bookId:'',index:0}, pendingScanDataUrl='', cropSourceUrl='', cropRect={x:0,y:0,w:0,h:0}, cropDrag=null;
-  let formulaBuilderAction='fraction';
+  let formulaBuilderAction='fraction', blockBuilderAction='';
 
   function uid(prefix='id'){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
   function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
@@ -432,13 +462,36 @@
     x=x.replace(/_\(([^()]+)\)/g,'<sub>$1</sub>').replace(/_([A-Za-zÀ-ÿ0-9+\-]+)/g,'<sub>$1</sub>');
     return x;
   }
-  function renderRichContent(raw=''){
+  function blockEncode(value){return encodeURIComponent(JSON.stringify(value))}
+  function blockDecode(value,fallback=null){try{return JSON.parse(decodeURIComponent(value))}catch{return fallback}}
+  function renderInlineContent(raw=''){
     let x=esc(String(raw));
     x=x.replace(/\[\[frac\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-frac"><span class="num">${formulaPart(a)}</span><span class="den">${formulaPart(b)}</span></span>`);
     x=x.replace(/\[\[pow\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-pow">${formulaPart(a)}<sup>${formulaPart(b)}</sup></span>`);
     x=x.replace(/\[\[root\|([^\]]*)\]\]/g,(_,a)=>`<span class="math-expression math-root"><span class="math-root-sign">√</span><span class="math-root-body">${formulaPart(a)}</span></span>`);
     x=x.replace(/\[\[sub\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-sub">${formulaPart(a)}<sub>${formulaPart(b)}</sub></span>`);
     return x.replace(/\n/g,'<br>');
+  }
+  function renderRichContent(raw='',noteObj=null,forNotebook=false){
+    let x=esc(String(raw));
+    x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,payload)=>{const t=blockDecode(payload,{headers:[],rows:[]}),headers=Array.isArray(t?.headers)?t.headers:[],rows=Array.isArray(t?.rows)?t.rows:[];if(!headers.length&&!rows.length)return'';const cols=Math.max(headers.length,...rows.map(r=>Array.isArray(r)?r.length:0),1);const head=headers.length?`<thead><tr>${Array.from({length:cols},(_,i)=>`<th>${renderInlineContent(headers[i]||'')}</th>`).join('')}</tr></thead>`:'';const body=`<tbody>${rows.map(r=>`<tr>${Array.from({length:cols},(_,i)=>`<td>${renderInlineContent((r||[])[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody>`;return `<div class="rich-table-wrap"><table class="rich-table">${head}${body}</table></div>`});
+    x=x.replace(/\[\[box\|([^\]]+)\]\]/g,(_,payload)=>{const b=blockDecode(payload,{title:'',text:''});return `<div class="rich-callout">${b?.title?`<b>${renderInlineContent(b.title)}</b>`:''}<div class="rich-callout-body">${renderInlineContent(b?.text||'')}</div></div>`});
+    x=x.replace(/\[\[arrow\|([^\]]+)\]\]/g,(_,payload)=>{const a=blockDecode(payload,{from:'',to:''});return `<div class="rich-arrow"><div class="side">${renderInlineContent(a?.from||'')}</div><div class="arr">➜</div><div class="side">${renderInlineContent(a?.to||'')}</div></div>`});
+    x=x.replace(/\[\[group\|([^\]]+)\]\]/g,(_,payload)=>{const g=blockDecode(payload,{title:'',items:[]}),items=Array.isArray(g?.items)?g.items:[];return `<div class="rich-group"><div class="rich-brace">{</div><div>${g?.title?`<div class="rich-group-title">${renderInlineContent(g.title)}</div>`:''}<div class="rich-group-items">${items.map(v=>`<div class="rich-group-item">${renderInlineContent(v)}</div>`).join('')}</div></div></div>`});
+    x=x.replace(/\[\[sep\]\]/g,'<div class="rich-separator"></div>');
+    x=x.replace(/\[\[image\]\]/g,()=>noteObj?noteImageHtml(noteObj,forNotebook):'<div class="rich-image-placeholder">📎 Imagem anexada aparecerá aqui.</div>');
+    x=x.replace(/\[\[frac\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-frac"><span class="num">${formulaPart(a)}</span><span class="den">${formulaPart(b)}</span></span>`);
+    x=x.replace(/\[\[pow\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-pow">${formulaPart(a)}<sup>${formulaPart(b)}</sup></span>`);
+    x=x.replace(/\[\[root\|([^\]]*)\]\]/g,(_,a)=>`<span class="math-expression math-root"><span class="math-root-sign">√</span><span class="math-root-body">${formulaPart(a)}</span></span>`);
+    x=x.replace(/\[\[sub\|([^|\]]*)\|([^\]]*)\]\]/g,(_,a,b)=>`<span class="math-expression math-sub">${formulaPart(a)}<sub>${formulaPart(b)}</sub></span>`);
+    return x.replace(/\n/g,'<br>');
+  }
+  function plainContent(raw=''){
+    let x=String(raw);
+    x=x.replace(/\[\[table\|([^\]]+)\]\]/g,(_,p)=>{const t=blockDecode(p,{headers:[],rows:[]});return [...(t.headers||[]),...(t.rows||[]).flat()].join(' ')});
+    x=x.replace(/\[\[(?:box|arrow|group)\|([^\]]+)\]\]/g,(_,p)=>{const o=blockDecode(p,{});return Object.values(o||{}).flat().join(' ')});
+    x=x.replace(/\[\[(?:frac|pow|sub)\|([^|\]]*)\|([^\]]*)\]\]/g,'$1 $2').replace(/\[\[root\|([^\]]*)\]\]/g,'$1').replace(/\[\[(?:sep|image)\]\]/g,' ');
+    return x;
   }
   function accountKey(uid){return ACCOUNT_PREFIX+uid}
   function hasContent(obj){return !!((obj?.books?.length||0)+(obj?.notes?.length||0))}
@@ -534,8 +587,40 @@
     else if(formulaBuilderAction==='sub'){if(!a||!b){toast('Preencha base e índice');return}token=`[[sub|${a}|${b}]]`}
     insertAtCursor(token);document.getElementById('formulaBuilder').classList.remove('show');
   }
+  function refreshBlockPreview(){
+    const area=document.getElementById('noteContent'),preview=document.getElementById('blockPreview');if(!area||!preview)return;
+    preview.innerHTML=area.value.trim()?renderRichContent(area.value):'<span style="color:var(--muted)">O conteúdo da página aparecerá aqui.</span>';
+  }
+  function setBlockTools(open){
+    const tools=document.getElementById('blockTools');if(!tools)return;tools.classList.toggle('show',!!open);if(open)refreshBlockPreview();else document.getElementById('blockBuilder')?.classList.remove('show');
+  }
+  function openBlockBuilder(action){
+    blockBuilderAction=action;const box=document.getElementById('blockBuilder'),title=document.getElementById('blockBuilderTitle'),fields=document.getElementById('blockBuilderFields');
+    if(action==='text'){insertAtCursor('\n\n');setBlockTools(false);return}
+    if(action==='separator'){insertAtCursor('\n[[sep]]\n');refreshBlockPreview();return}
+    if(action==='image'){if(!document.getElementById('noteContent').value.includes('[[image]]'))insertAtCursor('\n[[image]]\n');document.getElementById('scanImageInput').click();refreshBlockPreview();return}
+    const cfg={
+      table:{title:'▦ Tabela',html:'<div class="field"><label>Cabeçalhos <small>(separe as colunas com |)</small></label><input id="blockA" placeholder="Ex.: + | - | ? | WH?"></div><div class="field"><label>Linhas <small>(uma linha por linha; colunas com |)</small></label><textarea id="blockB" placeholder="I am | I am not | Am I? | — am I\\nYou are | You are not | Are you? | — are you"></textarea></div>'},
+      callout:{title:'📌 Caixa de observação',html:'<div class="field"><label>Título (opcional)</label><input id="blockA" placeholder="Ex.: Importante"></div><div class="field"><label>Texto</label><textarea id="blockB" placeholder="Escreva a observação..."></textarea></div>'},
+      arrow:{title:'➜ Seta / conexão',html:'<div class="field"><label>De</label><input id="blockA" placeholder="Ex.: Verbo to be"></div><div class="field"><label>Para</label><input id="blockB" placeholder="Ex.: WH Questions"></div>'},
+      group:{title:'{ Agrupamento',html:'<div class="field"><label>Título (opcional)</label><input id="blockA" placeholder="Ex.: Pronomes"></div><div class="field"><label>Itens <small>(um por linha)</small></label><textarea id="blockB" placeholder="I = eu\\nYou = você\\nHe = ele"></textarea></div>'}
+    }[action];if(!cfg)return;title.textContent=cfg.title;fields.innerHTML=cfg.html;box.classList.add('show');setTimeout(()=>document.getElementById('blockA')?.focus(),30);
+  }
+  function insertBuiltBlock(){
+    const a=document.getElementById('blockA')?.value.trim()||'',b=document.getElementById('blockB')?.value.trim()||'';let token='';
+    if(blockBuilderAction==='table'){
+      const headers=a.split('|').map(v=>v.trim()).filter((v,i,arr)=>v||arr.some(Boolean));const rows=b.split(/\n+/).map(line=>line.split('|').map(v=>v.trim())).filter(r=>r.some(Boolean));if(!headers.length&&!rows.length){toast('Preencha a tabela');return}token=`[[table|${blockEncode({headers,rows})}]]`;
+    }else if(blockBuilderAction==='callout'){
+      if(!a&&!b){toast('Escreva a caixa de observação');return}token=`[[box|${blockEncode({title:a,text:b})}]]`;
+    }else if(blockBuilderAction==='arrow'){
+      if(!a||!b){toast('Preencha os dois lados da seta');return}token=`[[arrow|${blockEncode({from:a,to:b})}]]`;
+    }else if(blockBuilderAction==='group'){
+      const items=b.split(/\n+/).map(v=>v.trim()).filter(Boolean);if(!a&&!items.length){toast('Adicione itens ao agrupamento');return}token=`[[group|${blockEncode({title:a,items})}]]`;
+    }
+    if(token)insertAtCursor(`\n${token}\n`);document.getElementById('blockBuilder').classList.remove('show');refreshBlockPreview();
+  }
   function openNote(type='note',existing=null,preselectBookId=''){
-    pendingScanDataUrl='';resetAttachmentUi();
+    pendingScanDataUrl='';resetAttachmentUi();setBlockTools(false);
     const f=document.getElementById('noteForm');f.reset();f.elements.id.value='';f.elements.type.value=type;document.getElementById('deleteNoteBtn').style.display='none';
     const titles={note:'Nova anotação',formula:'Nova fórmula',language:'Novo registro de idioma',course:'Nova anotação de curso',scan:'Página com foto'};document.getElementById('noteModalTitle').textContent=titles[type]||'Nova anotação';
     if(type==='formula')f.elements.content.placeholder='Fórmula:\n\nOnde:\n\nExemplo:\n\nQuando usar:';
@@ -545,7 +630,7 @@
     setFormulaTools(type==='formula');
     if(existing){
       document.getElementById('noteModalTitle').textContent='Editar anotação';f.elements.id.value=existing.id;f.elements.type.value=existing.type;f.elements.title.value=existing.title;f.elements.bookId.value=existing.bookId||'';f.elements.content.value=existing.content||'';f.elements.tags.value=(existing.tags||[]).join(', ');f.elements.source.value=existing.source||'';f.elements.favorite.checked=!!existing.favorite;f.elements.pinned.checked=!!existing.pinned;document.getElementById('deleteNoteBtn').style.display='block';
-      setFormulaTools(existing.type==='formula');refreshFormulaPreview();
+      setFormulaTools(existing.type==='formula');refreshFormulaPreview();refreshBlockPreview();
       if(existing.image){pendingScanDataUrl=existing.image;document.getElementById('scanPreviewImage').src=existing.image;document.getElementById('scanPreviewWrap').classList.add('show');document.getElementById('removeAttachedImageBtn').style.display='block'}
     }else if(preselectBookId){f.elements.bookId.value=preselectBookId}
     updateScanPageHint();
@@ -625,7 +710,7 @@
   }
   function viewNote(n){
     n.lastOpenedAt=Date.now();persistLocal();const page=n.bookId&&Number(n.pageOrder)>0?`<span class="pill">📄 Página ${Number(n.pageOrder)}</span>`:'';
-    document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${page}${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div><div style="white-space:normal;line-height:1.65">${renderRichContent(n.content||'Sem conteúdo.')}</div>${noteImageHtml(n)}${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal')
+    const hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${page}${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div><div style="white-space:normal;line-height:1.65">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div>${hasImageBlock?'':noteImageHtml(n)}${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal')
   }
   function openBook(id){
     const b=data.books.find(x=>x.id===id);if(!b)return;show('books');const notes=orderedBookNotes(id);
@@ -637,10 +722,10 @@
     const b=data.books.find(x=>x.id===notebookState.bookId),notes=orderedBookNotes(notebookState.bookId),paper=document.getElementById('notebookPaper');if(!b){closeModals();return}
     notebookState.index=Math.max(0,Math.min(notebookState.index,Math.max(0,notes.length-1)));document.getElementById('notebookTitle').textContent=`${b.emoji||'📘'} ${b.name}`;document.getElementById('notebookBookName').textContent='Modo caderno · ordem das páginas';
     if(!notes.length){document.getElementById('notebookPageLabel').textContent='Caderno vazio';document.getElementById('notebookCount').textContent='0 / 0';paper.innerHTML='<div class="notebook-empty">Digitalize ou crie a primeira página deste caderno.</div>';document.getElementById('prevNotebookPage').disabled=true;document.getElementById('nextNotebookPage').disabled=true;document.getElementById('editNotebookPageBtn').disabled=true;return}
-    const n=notes[notebookState.index],pageNo=notebookState.index+1;document.getElementById('notebookPageLabel').textContent=`Página ${pageNo}`;document.getElementById('notebookCount').textContent=`${pageNo} / ${notes.length}`;paper.innerHTML=`<div class="notebook-page-title">${esc(n.title)}</div><div class="notebook-page-text">${renderRichContent(n.content||'Sem texto nesta página.')}</div>${noteImageHtml(n,true)}`;document.getElementById('prevNotebookPage').disabled=notebookState.index<=0;document.getElementById('nextNotebookPage').disabled=notebookState.index>=notes.length-1;document.getElementById('editNotebookPageBtn').disabled=false;
+    const n=notes[notebookState.index],pageNo=notebookState.index+1,hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('notebookPageLabel').textContent=`Página ${pageNo}`;document.getElementById('notebookCount').textContent=`${pageNo} / ${notes.length}`;paper.innerHTML=`<div class="notebook-page-title">${esc(n.title)}</div><div class="notebook-page-text">${renderRichContent(n.content||'Sem texto nesta página.',n,true)}</div>${hasImageBlock?'':noteImageHtml(n,true)}`;document.getElementById('prevNotebookPage').disabled=notebookState.index<=0;document.getElementById('nextNotebookPage').disabled=notebookState.index>=notes.length-1;document.getElementById('editNotebookPageBtn').disabled=false;
   }
-  function runSearch(q){q=(q||'').trim().toLowerCase();const out=q?data.notes.filter(n=>[n.title,n.content,n.source,bookName(n.bookId),...(n.tags||[])].join(' ').toLowerCase().includes(q)):[];renderList('searchResults',out,q?'Nenhum resultado encontrado.':'Digite algo para pesquisar em todo o seu caderno.')}
-  function renderReview(){const box=document.getElementById('reviewBox');const pool=data.notes.filter(n=>n.favorite||n.pinned);if(!data.settings.review){box.innerHTML=empty('A revisão está desativada nos ajustes.');return}if(!pool.length){box.innerHTML=empty('Favorite ou fixe algumas anotações para começar a revisão.');return}const n=pool[Math.floor(Math.random()*pool.length)];box.innerHTML=`<div class="review-card"><div style="font-size:30px">🧠</div><div class="q">O que você lembra sobre “${esc(n.title)}”?</div><p style="color:var(--muted)">Tente responder de cabeça antes de revelar.</p><div class="answer" id="reviewAnswer">${renderRichContent(n.content||'Sem conteúdo.')}</div><button class="primary" id="showAnswer">Mostrar resposta</button> <button class="secondary" id="nextReview">Outra</button></div>`;document.getElementById('showAnswer').onclick=()=>document.getElementById('reviewAnswer').classList.add('show');document.getElementById('nextReview').onclick=renderReview}
+  function runSearch(q){q=(q||'').trim().toLowerCase();const out=q?data.notes.filter(n=>[n.title,plainContent(n.content),n.source,bookName(n.bookId),...(n.tags||[])].join(' ').toLowerCase().includes(q)):[];renderList('searchResults',out,q?'Nenhum resultado encontrado.':'Digite algo para pesquisar em todo o seu caderno.')}
+  function renderReview(){const box=document.getElementById('reviewBox');const pool=data.notes.filter(n=>n.favorite||n.pinned);if(!data.settings.review){box.innerHTML=empty('A revisão está desativada nos ajustes.');return}if(!pool.length){box.innerHTML=empty('Favorite ou fixe algumas anotações para começar a revisão.');return}const n=pool[Math.floor(Math.random()*pool.length)];box.innerHTML=`<div class="review-card"><div style="font-size:30px">🧠</div><div class="q">O que você lembra sobre “${esc(n.title)}”?</div><p style="color:var(--muted)">Tente responder de cabeça antes de revelar.</p><div class="answer" id="reviewAnswer">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div><button class="primary" id="showAnswer">Mostrar resposta</button> <button class="secondary" id="nextReview">Outra</button></div>`;document.getElementById('showAnswer').onclick=()=>document.getElementById('reviewAnswer').classList.add('show');document.getElementById('nextReview').onclick=renderReview}
   function updateCloud(){const status=window.FirebaseBridge?.status?.()||{configured:true,connected:false,label:navigator.onLine?'Conectando...':'Offline'};const connected=!!status.connected;document.getElementById('cloudText').textContent=status.label||'Firebase';document.getElementById('cloudDot').classList.toggle('ok',connected);document.getElementById('firebaseSettingText').textContent=connected?'Textos sincronizados · imagens locais':(navigator.onLine?'Aguardando sincronização dos textos':'Offline · textos sincronizam quando voltar');document.getElementById('accountEmail').textContent=activeEmail||'Conta';document.getElementById('firebaseAccountEmail').textContent=activeEmail||'Conta';document.getElementById('firebaseModalStatus').textContent=status.label||'Verificando...';document.getElementById('firebaseModalDot').classList.toggle('ok',connected)}
   function setAuthMessage(msg=''){document.getElementById('authMessage').textContent=msg}
   function authError(err){const code=err?.code||'';return ({'auth/invalid-credential':'E-mail ou senha incorretos.','auth/email-already-in-use':'Este e-mail já possui uma conta.','auth/weak-password':'Escolha uma senha mais forte.','auth/invalid-email':'Digite um e-mail válido.','auth/too-many-requests':'Muitas tentativas. Tente novamente mais tarde.','auth/network-request-failed':'Sem conexão com a internet.','auth/user-disabled':'Esta conta foi desativada.'})[code]||'Não foi possível concluir. Verifique os dados e tente novamente.'}
@@ -662,11 +747,15 @@
   document.getElementById('bookForm').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.currentTarget);data.books.push({id:uid('book'),emoji:fd.get('emoji')||'📘',name:fd.get('name').trim(),description:fd.get('description')||'',createdAt:Date.now(),updatedAt:Date.now()});save();e.currentTarget.reset();e.currentTarget.elements.emoji.value='📘';closeModals();toast('Caderno criado')};
   document.getElementById('noteForm').onsubmit=async e=>{e.preventDefault();await saveNote(e.currentTarget)};
   document.getElementById('formulaToggleBtn').onclick=()=>setFormulaTools(!document.getElementById('formulaTools').classList.contains('show'));
+  document.getElementById('blockToggleBtn').onclick=()=>setBlockTools(!document.getElementById('blockTools').classList.contains('show'));
+  document.querySelectorAll('[data-block-action]').forEach(btn=>btn.onclick=()=>openBlockBuilder(btn.dataset.blockAction));
+  document.getElementById('blockBuilderCancel').onclick=()=>document.getElementById('blockBuilder').classList.remove('show');
+  document.getElementById('blockBuilderInsert').onclick=insertBuiltBlock;
   document.querySelectorAll('[data-formula-build]').forEach(btn=>btn.onclick=()=>openFormulaBuilder(btn.dataset.formulaBuild));
   document.querySelectorAll('[data-formula-symbol]').forEach(btn=>btn.onclick=()=>insertAtCursor(btn.dataset.formulaSymbol));
   document.getElementById('formulaBuilderCancel').onclick=()=>document.getElementById('formulaBuilder').classList.remove('show');
   document.getElementById('formulaBuilderInsert').onclick=insertBuiltFormula;
-  document.getElementById('noteContent').addEventListener('input',refreshFormulaPreview);
+  document.getElementById('noteContent').addEventListener('input',()=>{refreshFormulaPreview();refreshBlockPreview()});
   document.getElementById('deleteNoteBtn').onclick=()=>{const id=document.getElementById('noteForm').elements.id.value;if(!id)return;if(confirm('Excluir esta anotação?')){const old=data.notes.find(n=>n.id===id),bookId=old?.bookId||'';deleteLocalImage(id).catch(()=>{});data.notes=data.notes.filter(n=>n.id!==id);if(bookId)renumberBook(bookId);save();closeModals();toast('Anotação excluída')}};
   document.getElementById('homeSearch').oninput=e=>{show('search');document.getElementById('searchInput').value=e.target.value;runSearch(e.target.value)};document.getElementById('searchInput').oninput=e=>runSearch(e.target.value);
   document.getElementById('photoQuick').onclick=()=>openNote('note');document.getElementById('centralBtn').onclick=()=>location.href=CENTRAL_URL;
