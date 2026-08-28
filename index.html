@@ -439,7 +439,7 @@
 <div class="modal-wrap" id="generalPasswordModal"><div class="modal"><div class="modal-head"><h2>🔐 Senha geral</h2><button class="close" type="button" id="generalPasswordClose">✕</button></div><div class="notice security-warning" style="margin-bottom:12px"><b>Guarde esta senha</b>Ela não é enviada em texto simples. Se houver cadernos criptografados e você esquecer a senha, o app não consegue recuperar o conteúdo.</div><form class="form" id="generalPasswordForm"><div class="field" id="currentGeneralPasswordField" style="display:none"><label>Senha atual</label><input type="password" name="currentPassword" autocomplete="current-password" /></div><div class="field"><label id="newGeneralPasswordLabel">Nova senha geral</label><input type="password" name="newPassword" autocomplete="new-password" required minlength="4" /></div><div class="field"><label>Confirmar nova senha</label><input type="password" name="confirmPassword" autocomplete="new-password" required minlength="4" /></div><div class="password-message" id="generalPasswordMessage"></div><button class="primary">Salvar senha geral</button></form></div></div>
 <div class="modal-wrap" id="viewModal"><div class="modal"><div class="modal-head"><h2 id="viewTitle"></h2><button class="close" data-close>✕</button></div><div id="viewBody"></div></div></div>
 <div class="modal-wrap" id="notebookModal"><div class="modal notebook-modal"><div class="modal-head"><h2 id="notebookTitle">📖 Modo caderno</h2><button class="close" data-close>✕</button></div>
-  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Nova página com foto</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button></div>
+  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Nova página com foto</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button><button class="secondary danger" id="deleteNotebookBtn" type="button">🗑️ Excluir caderno</button></div>
   <div class="notebook-page-meta"><span id="notebookBookName"></span><span id="notebookPageLabel"></span></div>
   <div id="notebookPaper" class="notebook-paper"></div>
   <div class="notebook-controls"><button class="secondary" id="prevNotebookPage" type="button">← Anterior</button><div class="notebook-count" id="notebookCount">0 / 0</div><button class="secondary" id="nextNotebookPage" type="button">Próxima →</button></div>
@@ -905,8 +905,23 @@
   }
   async function openBook(id){
     const b=data.books.find(x=>x.id===id);if(!b)return;if(!(await ensureBookUnlocked(b)))return;show('books');const notes=orderedBookNotes(id);
-    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)} ${isProtectedBook(b)?'🔓':''}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p>${isProtectedBook(b)?'<div class="lock-badge" style="margin-bottom:9px">🔐 Conteúdo criptografado · desbloqueado nesta sessão</div>':''}<div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Nova página com foto</button></div><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
-    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('note',null,id)
+    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)} ${isProtectedBook(b)?'🔓':''}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p>${isProtectedBook(b)?'<div class="lock-badge" style="margin-bottom:9px">🔐 Conteúdo criptografado · desbloqueado nesta sessão</div>':''}<div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Nova página com foto</button></div><button class="secondary danger" id="deleteBookBtn" style="width:100%;margin-top:8px">🗑️ Excluir caderno</button><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
+    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('note',null,id);document.getElementById('deleteBookBtn').onclick=()=>deleteBook(id)
+  }
+  async function deleteBook(bookId){
+    const b=bookById(bookId);if(!b)return;
+    if(isProtectedBook(b)&&!isBookUnlocked(b)&&!(await ensureBookUnlocked(b)))return;
+    const notes=data.notes.filter(n=>n.bookId===bookId),count=notes.length;
+    const warning=count?`Excluir o caderno “${b.name}” e suas ${count} ${count===1?'anotação':'anotações'}?\n\nIsso também remove as imagens locais dessas páginas e não pode ser desfeito.`:`Excluir o caderno “${b.name}”?\n\nEssa ação não pode ser desfeita.`;
+    if(!confirm(warning))return;
+    closeModals();
+    const ids=notes.map(n=>n.id);
+    data.notes=data.notes.filter(n=>n.bookId!==bookId);
+    data.books=data.books.filter(x=>x.id!==bookId);
+    bookKeys.delete(bookId);
+    if(notebookState.bookId===bookId)notebookState={bookId:'',index:0};
+    await Promise.allSettled(ids.map(id=>deleteLocalImage(id)));
+    save();show('books');renderAll();toast('Caderno excluído');
   }
   async function openNotebook(bookId,index=0){const b=bookById(bookId);if(b&&!(await ensureBookUnlocked(b)))return;notebookState={bookId,index};renderNotebookPage();openModal('notebookModal');scheduleRichLinks(document.getElementById('notebookPaper'))}
   function renderNotebookPage(){
@@ -935,7 +950,31 @@
     if(e.target.matches('[data-close]')||e.target.classList.contains('modal-wrap'))closeModals();
   });
   document.getElementById('menuBtn').onclick=()=>document.getElementById('drawerWrap').classList.add('open');document.getElementById('drawerOverlay').onclick=()=>document.getElementById('drawerWrap').classList.remove('open');document.getElementById('addBtn').onclick=()=>openModal('addModal');
-  document.getElementById('bookForm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.currentTarget),mode=String(fd.get('protection')||'none'),book={id:uid('book'),emoji:fd.get('emoji')||'📘',name:fd.get('name').trim(),description:fd.get('description')||'',createdAt:Date.now(),updatedAt:Date.now()};if(mode==='general'){if(!securitySettings().general){toast('Defina primeiro a senha geral em Ajustes');return}let pwd=generalPasswordSession;if(!pwd){pwd=await openPasswordPrompt('🔐 Confirmar senha geral','Digite sua senha geral para criar este caderno protegido.',async p=>(await verifyGeneralPassword(p))?true:'Senha geral incorreta.')}if(!pwd)return;book.security=await makeBookSecurity('general',pwd);bookKeys.set(book.id,await deriveBookKey(pwd,book.security.encSalt));generalPasswordSession=pwd}else if(mode==='custom'){const pwd=String(fd.get('customPassword')||''),cf=String(fd.get('customConfirm')||'');if(pwd.length<4){toast('Use pelo menos 4 caracteres na senha');return}if(pwd!==cf){toast('As senhas do caderno não coincidem');return}book.security=await makeBookSecurity('custom',pwd);bookKeys.set(book.id,await deriveBookKey(pwd,book.security.encSalt))}data.books.push(book);await save();e.currentTarget.reset();e.currentTarget.elements.emoji.value='📘';document.getElementById('bookProtectionSelect').value='none';updateBookProtectionFields();closeModals();toast(mode==='none'?'Caderno criado':'Caderno protegido criado')};
+  document.getElementById('bookForm').onsubmit=async e=>{
+    e.preventDefault();
+    const form=e.currentTarget,submit=form.querySelector('button.primary');
+    if(submit?.disabled)return;
+    if(submit)submit.disabled=true;
+    const release=()=>{if(submit)submit.disabled=false};
+    const fd=new FormData(form),mode=String(fd.get('protection')||'none'),book={id:uid('book'),emoji:fd.get('emoji')||'📘',name:String(fd.get('name')||'').trim(),description:fd.get('description')||'',createdAt:Date.now(),updatedAt:Date.now()};
+    if(!book.name){release();toast('Digite o nome do caderno');return}
+    if(mode==='general'){
+      if(!securitySettings().general){release();toast('Defina primeiro a senha geral em Ajustes');return}
+      let pwd=generalPasswordSession;
+      if(!pwd)pwd=await openPasswordPrompt('🔐 Confirmar senha geral','Digite sua senha geral para criar este caderno protegido.',async p=>(await verifyGeneralPassword(p))?true:'Senha geral incorreta.');
+      if(!pwd){release();return}
+      book.security=await makeBookSecurity('general',pwd);bookKeys.set(book.id,await deriveBookKey(pwd,book.security.encSalt));generalPasswordSession=pwd;
+    }else if(mode==='custom'){
+      const pwd=String(fd.get('customPassword')||''),cf=String(fd.get('customConfirm')||'');
+      if(pwd.length<4){release();toast('Use pelo menos 4 caracteres na senha');return}
+      if(pwd!==cf){release();toast('As senhas do caderno não coincidem');return}
+      book.security=await makeBookSecurity('custom',pwd);bookKeys.set(book.id,await deriveBookKey(pwd,book.security.encSalt));
+    }
+    data.books.push(book);
+    form.reset();form.elements.emoji.value='📘';document.getElementById('bookProtectionSelect').value='none';updateBookProtectionFields();
+    closeModals();toast(mode==='none'?'Caderno criado':'Caderno protegido criado');
+    try{await save()}finally{release()}
+  };
   document.getElementById('noteForm').onsubmit=async e=>{e.preventDefault();await saveNote(e.currentTarget)};
   document.getElementById('formulaToggleBtn').onclick=()=>setFormulaTools(!document.getElementById('formulaTools').classList.contains('show'));
   document.getElementById('blockToggleBtn').onclick=()=>setBlockTools(!document.getElementById('blockTools').classList.contains('show'));
@@ -964,6 +1003,7 @@
   document.getElementById('nextNotebookPage').onclick=()=>{notebookState.index++;renderNotebookPage()};
   document.getElementById('scanNextPageBtn').onclick=()=>{const id=notebookState.bookId;closeModals();openNote('note',null,id)};
   document.getElementById('editNotebookPageBtn').onclick=()=>{const notes=orderedBookNotes(notebookState.bookId),n=notes[notebookState.index];if(n){closeModals();openNote(n.type,n)}};
+  document.getElementById('deleteNotebookBtn').onclick=()=>deleteBook(notebookState.bookId);
   document.getElementById('cloudBtn').onclick=document.getElementById('firebaseInfoBtn').onclick=()=>openModal('firebaseModal');
   document.getElementById('reviewSwitch').onclick=e=>{data.settings.review=!data.settings.review;e.currentTarget.classList.toggle('on',data.settings.review);save()};
   function updateBookProtectionFields(){const mode=document.getElementById('bookProtectionSelect').value,box=document.getElementById('bookLockOptions'),custom=document.getElementById('bookCustomPasswordFields'),hint=document.getElementById('bookGeneralHint');box.style.display=mode==='none'?'none':'grid';custom.classList.toggle('show',mode==='custom');hint.style.display=mode==='general'?'block':'none'}
@@ -998,7 +1038,7 @@
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
   let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
   document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=20').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=21').catch(()=>{}));
   renderAll();
 })();
 </script>
