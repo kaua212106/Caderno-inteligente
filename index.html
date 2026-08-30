@@ -193,10 +193,14 @@
     .page-hint{margin-top:8px;font-size:10px;font-weight:800;color:#5363dc}
     .notebook-modal{width:min(560px,100%);max-height:94vh}
     .notebook-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-    .notebook-paper{position:relative;min-height:430px;padding:34px 24px 32px 46px;border:1px solid #e3dfd4;border-radius:18px;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 31px,#dfe5f2 32px);box-shadow:0 14px 32px rgba(35,40,70,.10);overflow:hidden}
+    .notebook-paper{--paper-line:32px;position:relative;min-height:430px;padding:9px 24px 32px 46px;border:1px solid #e3dfd4;border-radius:18px;background:repeating-linear-gradient(to bottom,#fffdf8 0,#fffdf8 calc(var(--paper-line) - 1px),#dfe5f2 var(--paper-line));box-shadow:0 14px 32px rgba(35,40,70,.10);overflow:hidden}
     .notebook-paper::before{content:"";position:absolute;left:31px;top:0;bottom:0;width:1px;background:#efb7b7}
-    .notebook-page-title{font-size:20px;font-weight:850;margin-bottom:14px;line-height:1.3}
-    .notebook-page-text{white-space:pre-wrap;line-height:2;min-height:70px;font-size:13px}
+    .notebook-page-title{font-size:20px;font-weight:850;margin:0;line-height:var(--paper-line);min-height:var(--paper-line)}
+    .notebook-page-text{white-space:pre-wrap;line-height:var(--paper-line);min-height:70px;font-size:16px}
+    .notebook-page-text br{line-height:var(--paper-line)}
+    .notebook-page-text .rich-table-wrap,.notebook-page-text .rich-callout,.notebook-page-text .rich-group,.notebook-page-text .rich-separator,.notebook-page-text .notebook-page-photo{white-space:normal}
+    .book-security-status{padding:12px 13px;border-radius:14px;background:#f8f9fc;border:1px solid var(--line);font-size:11px;line-height:1.5;color:var(--muted)}.book-security-status b{display:block;color:var(--text);font-size:12px;margin-bottom:3px}
+    .pdf-render-stage{position:fixed;left:-12000px;top:0;width:794px;pointer-events:none;opacity:1;z-index:-1}.pdf-render-stage .notebook-paper{width:794px;min-height:1123px;border-radius:0;box-shadow:none;padding-right:46px}.pdf-render-stage .notebook-page-text{font-size:18px}.pdf-render-stage .notebook-page-title{font-size:23px}
     .notebook-page-photo{margin-top:22px;padding-top:16px;border-top:1px dashed #cfd4df}.notebook-page-photo b{display:block;font-size:11px;margin-bottom:9px;color:var(--muted)}.notebook-page-photo img{display:block;width:100%;border-radius:14px;border:1px solid #e1e5ed;background:white}
     .notebook-page-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 10px;color:var(--muted);font-size:10px;font-weight:800}
     .notebook-controls{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:13px}.notebook-count{font-size:11px;font-weight:850;color:var(--muted);white-space:nowrap}
@@ -437,9 +441,10 @@
 
 <div class="modal-wrap" id="passwordPromptModal"><div class="modal"><div class="modal-head"><h2 id="passwordPromptTitle">🔒 Desbloquear caderno</h2><button class="close" type="button" id="passwordPromptClose">✕</button></div><p id="passwordPromptText" style="color:var(--muted);font-size:11px;line-height:1.55;margin-bottom:12px"></p><form class="form" id="passwordPromptForm"><div class="field"><label>Senha</label><input type="password" id="passwordPromptInput" autocomplete="current-password" required /></div><div class="password-message" id="passwordPromptMessage"></div><button class="primary">Desbloquear</button></form></div></div>
 <div class="modal-wrap" id="generalPasswordModal"><div class="modal"><div class="modal-head"><h2>🔐 Senha geral</h2><button class="close" type="button" id="generalPasswordClose">✕</button></div><div class="notice security-warning" style="margin-bottom:12px"><b>Guarde esta senha</b>Ela não é enviada em texto simples. Se houver cadernos criptografados e você esquecer a senha, o app não consegue recuperar o conteúdo.</div><form class="form" id="generalPasswordForm"><div class="field" id="currentGeneralPasswordField" style="display:none"><label>Senha atual</label><input type="password" name="currentPassword" autocomplete="current-password" /></div><div class="field"><label id="newGeneralPasswordLabel">Nova senha geral</label><input type="password" name="newPassword" autocomplete="new-password" required minlength="4" /></div><div class="field"><label>Confirmar nova senha</label><input type="password" name="confirmPassword" autocomplete="new-password" required minlength="4" /></div><div class="password-message" id="generalPasswordMessage"></div><button class="primary">Salvar senha geral</button></form></div></div>
+<div class="modal-wrap" id="bookSecurityModal"><div class="modal"><div class="modal-head"><h2>🔐 Proteção do caderno</h2><button class="close" type="button" id="bookSecurityClose">✕</button></div><div class="book-security-status" id="bookSecurityStatus"><b>Caderno</b>Escolha como deseja proteger este caderno.</div><form class="form" id="bookSecurityForm" style="margin-top:12px"><input type="hidden" name="bookId" id="securityBookId" /><div class="field"><label>Proteção</label><select name="mode" id="existingBookProtectionSelect"><option value="none">Sem senha</option><option value="general">Usar senha geral</option><option value="custom">Senha exclusiva deste caderno</option></select></div><div class="notice soft" id="existingBookGeneralHint" style="display:none"><b>Senha geral</b>Usará a senha definida em Ajustes → Segurança.</div><div class="book-lock-fields" id="existingBookCustomFields"><div class="field"><label id="existingBookCustomPasswordLabel">Nova senha deste caderno</label><input type="password" name="customPassword" autocomplete="new-password" /></div><div class="field"><label>Confirmar senha</label><input type="password" name="customConfirm" autocomplete="new-password" /></div><small id="existingBookCustomHelp" style="color:var(--muted);font-size:9px;line-height:1.4"></small></div><div class="password-message" id="bookSecurityMessage"></div><button class="primary" id="bookSecuritySaveBtn">Salvar proteção</button><button class="secondary" type="button" id="lockThisBookNowBtn" style="display:none">🔒 Bloquear agora</button></form></div></div>
 <div class="modal-wrap" id="viewModal"><div class="modal"><div class="modal-head"><h2 id="viewTitle"></h2><button class="close" data-close>✕</button></div><div id="viewBody"></div></div></div>
 <div class="modal-wrap" id="notebookModal"><div class="modal notebook-modal"><div class="modal-head"><h2 id="notebookTitle">📖 Modo caderno</h2><button class="close" data-close>✕</button></div>
-  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Nova página com foto</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button><button class="secondary danger" id="deleteNotebookBtn" type="button">🗑️ Excluir caderno</button></div>
+  <div class="notebook-toolbar"><button class="secondary" id="scanNextPageBtn" type="button">📷 Nova página com foto</button><button class="secondary" id="editNotebookPageBtn" type="button">✏️ Editar esta página</button><button class="secondary" id="notebookSecurityBtn" type="button">🔐 Proteção</button><button class="secondary" id="shareNotebookPdfBtn" type="button">📤 Compartilhar PDF</button><button class="secondary danger" id="deleteNotebookBtn" type="button">🗑️ Excluir caderno</button></div>
   <div class="notebook-page-meta"><span id="notebookBookName"></span><span id="notebookPageLabel"></span></div>
   <div id="notebookPaper" class="notebook-paper"></div>
   <div class="notebook-controls"><button class="secondary" id="prevNotebookPage" type="button">← Anterior</button><div class="notebook-count" id="notebookCount">0 / 0</div><button class="secondary" id="nextNotebookPage" type="button">Próxima →</button></div>
@@ -647,6 +652,7 @@
   async function putImageRecord(record){const db=await openImageDB();await new Promise((resolve,reject)=>{const tx=db.transaction(IMAGE_STORE,'readwrite');tx.objectStore(IMAGE_STORE).put(record);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}
   async function hydrateBookImages(bookId){if(!activeUid)return;const key=bookKeys.get(bookId),records=await getLocalImageRecords(),map=new Map(records.map(r=>[r.noteId,r]));for(const n of data.notes.filter(x=>x.bookId===bookId)){const rec=map.get(n.id);delete n.image;if(!rec)continue;if(rec.dataUrl)n.image=rec.dataUrl;else if(rec.cipher&&key){try{n.image=await decryptString(rec.cipher,key,`image:${n.id}:${bookId}`)}catch{}}if(n.image)n.hasImage=true}}
   async function rekeyImagesForBook(bookId,oldKey,newKey){const records=(await getLocalImageRecords()).filter(r=>r.bookId===bookId||r.noteId&&data.notes.some(n=>n.id===r.noteId&&n.bookId===bookId));for(const rec of records){let dataUrl=rec.dataUrl||'';if(!dataUrl&&rec.cipher)try{dataUrl=await decryptString(rec.cipher,oldKey,`image:${rec.noteId}:${bookId}`)}catch{}if(!dataUrl)continue;const cipher=await encryptString(dataUrl,newKey,`image:${rec.noteId}:${bookId}`);await putImageRecord({key:`${activeUid}:${rec.noteId}`,uid:activeUid,noteId:rec.noteId,bookId,locked:true,cipher,updatedAt:Date.now()})}}
+  async function unprotectImagesForBook(bookId,key){const records=(await getLocalImageRecords()).filter(r=>r.bookId===bookId||r.noteId&&data.notes.some(n=>n.id===r.noteId&&n.bookId===bookId));for(const rec of records){let dataUrl=rec.dataUrl||'';if(!dataUrl&&rec.cipher)try{dataUrl=await decryptString(rec.cipher,key,`image:${rec.noteId}:${bookId}`)}catch{}if(!dataUrl)continue;await putImageRecord({key:`${activeUid}:${rec.noteId}`,uid:activeUid,noteId:rec.noteId,bookId,locked:false,dataUrl,updatedAt:Date.now()});const n=data.notes.find(x=>x.id===rec.noteId);if(n){n.image=dataUrl;n.hasImage=true}}}
   async function buildSecureSnapshot(source=data){const out={...source,version:5,settings:source.settings,books:(source.books||[]).map(b=>({...b})),notes:[]};for(const n of source.notes||[]){const b=(source.books||[]).find(x=>x.id===n.bookId);if(b?.security?.locked){if(n.title===undefined&&n.encryptedPayload){out.notes.push({...n});continue}const key=bookKeys.get(b.id);if(!key){if(n.encryptedPayload){const stub={id:n.id,bookId:n.bookId,pageOrder:n.pageOrder||0,hasImage:!!n.hasImage,createdAt:n.createdAt||0,updatedAt:n.updatedAt||0,encryptedPayload:n.encryptedPayload};out.notes.push(stub);continue}throw new Error('Caderno protegido sem chave disponível')}const cipher=await encryptJson(notePayload(n),key,`note:${n.id}:${b.id}`);n.encryptedPayload=cipher;out.notes.push({id:n.id,bookId:n.bookId,pageOrder:n.pageOrder||0,hasImage:!!n.hasImage,createdAt:n.createdAt||0,updatedAt:n.updatedAt||0,encryptedPayload:cipher})}else{const c={...n};delete c.image;delete c.encryptedPayload;out.notes.push(c)}}return out}
   function normalizeSettings(settings){return {review:true,...(settings||{}),security:{general:null,hideLockedNames:true,autoLock:'leave',...((settings||{}).security||{})}}}
   function openPasswordPrompt(title,text,validator){return new Promise(resolve=>{passwordPromptResolver=resolve;passwordPromptValidator=validator;document.getElementById('passwordPromptTitle').textContent=title;document.getElementById('passwordPromptText').textContent=text;document.getElementById('passwordPromptMessage').textContent='';document.getElementById('passwordPromptInput').value='';document.getElementById('passwordPromptModal').classList.add('open');setTimeout(()=>document.getElementById('passwordPromptInput').focus(),50)})}
@@ -903,10 +909,86 @@
     if(n.bookId){const b=bookById(n.bookId);if(b&&!(await ensureBookUnlocked(b)))return;n=data.notes.find(x=>x.id===n.id)||n}n.lastOpenedAt=Date.now();persistLocal();const page=n.bookId&&Number(n.pageOrder)>0?`<span class="pill">📄 Página ${Number(n.pageOrder)}</span>`:'';
     const hasImageBlock=String(n.content||'').includes('[[image]]');document.getElementById('viewTitle').textContent=n.title;document.getElementById('viewBody').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="pill">${typeIcon(n.type)} ${esc(bookName(n.bookId))}</span>${page}${n.favorite?'<span class="pill">⭐ Favorito</span>':''}${n.pinned?'<span class="pill">📌 Fixado</span>':''}</div><div style="white-space:normal;line-height:1.65">${renderRichContent(n.content||'Sem conteúdo.',n,false)}</div>${hasImageBlock?'':noteImageHtml(n)}${n.source?`<p style="color:var(--muted);margin-top:18px"><b>Fonte:</b> ${esc(n.source)}</p>`:''}<div style="margin-top:14px">${(n.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div><button class="primary" data-edit="${n.id}" style="width:100%;margin-top:18px">Editar anotação</button>`;openModal('viewModal');scheduleRichLinks(document.getElementById('viewBody'))
   }
+  let securityBookReturnToNotebook=false;
+  function updateExistingBookProtectionFields(){
+    const mode=document.getElementById('existingBookProtectionSelect').value;
+    const custom=document.getElementById('existingBookCustomFields'),hint=document.getElementById('existingBookGeneralHint');
+    custom.classList.toggle('show',mode==='custom');hint.style.display=mode==='general'?'block':'none';
+  }
+  async function openBookSecurity(bookId,fromNotebook=false){
+    const b=bookById(bookId);if(!b)return;if(isProtectedBook(b)&&!(await ensureBookUnlocked(b)))return;
+    securityBookReturnToNotebook=!!fromNotebook;
+    document.getElementById('securityBookId').value=b.id;
+    const mode=isProtectedBook(b)?(b.security.mode||'custom'):'none';
+    document.getElementById('existingBookProtectionSelect').value=mode;
+    document.getElementById('bookSecurityMessage').textContent='';
+    document.getElementById('bookSecurityForm').reset();document.getElementById('securityBookId').value=b.id;document.getElementById('existingBookProtectionSelect').value=mode;
+    document.getElementById('bookSecurityStatus').innerHTML=`<b>${esc(b.emoji||'📘')} ${esc(b.name)}</b>${isProtectedBook(b)?'Este caderno está protegido e desbloqueado nesta sessão.':'Este caderno não possui senha.'}`;
+    document.getElementById('existingBookCustomPasswordLabel').textContent=isProtectedBook(b)&&mode==='custom'?'Nova senha deste caderno':'Senha deste caderno';
+    document.getElementById('existingBookCustomHelp').textContent=isProtectedBook(b)&&mode==='custom'?'Deixe os campos vazios para manter a senha exclusiva atual.':'Use pelo menos 4 caracteres.';
+    document.getElementById('lockThisBookNowBtn').style.display=isProtectedBook(b)?'block':'none';
+    updateExistingBookProtectionFields();document.getElementById('bookSecurityModal').classList.add('open');
+  }
+  async function saveExistingBookSecurity(form){
+    const fd=new FormData(form),book=bookById(String(fd.get('bookId')||''));if(!book)return;
+    const wanted=String(fd.get('mode')||'none'),oldProtected=isProtectedBook(book),oldMode=oldProtected?book.security.mode:'none',oldKey=oldProtected?bookKeys.get(book.id):null,msg=document.getElementById('bookSecurityMessage'),btn=document.getElementById('bookSecuritySaveBtn');
+    msg.textContent='';btn.disabled=true;
+    try{
+      if(oldProtected&&!oldKey&&!(await ensureBookUnlocked(book)))return;
+      const currentKey=oldProtected?(bookKeys.get(book.id)||oldKey):null;
+      if(wanted==='none'){
+        if(oldProtected){await unprotectImagesForBook(book.id,currentKey);delete book.security;bookKeys.delete(book.id);for(const n of data.notes.filter(n=>n.bookId===book.id))delete n.encryptedPayload;book.updatedAt=Date.now();await save();toast('Proteção removida do caderno')}
+      }else if(wanted==='general'){
+        if(!securitySettings().general){msg.textContent='Defina primeiro a senha geral em Ajustes → Segurança.';return}
+        if(oldProtected&&oldMode==='general'){document.getElementById('bookSecurityModal').classList.remove('open');toast('Este caderno já usa a senha geral');return}
+        let pwd=generalPasswordSession;
+        if(!pwd)pwd=await openPasswordPrompt('🔐 Confirmar senha geral','Digite sua senha geral para proteger este caderno.',async p=>(await verifyGeneralPassword(p))?true:'Senha geral incorreta.');
+        if(!pwd)return;
+        const nextSec=await makeBookSecurity('general',pwd),nextKey=await deriveBookKey(pwd,nextSec.encSalt);
+        if(oldProtected)await rekeyImagesForBook(book.id,currentKey,nextKey);else await rekeyImagesForBook(book.id,null,nextKey);
+        book.security=nextSec;bookKeys.set(book.id,nextKey);generalPasswordSession=pwd;book.updatedAt=Date.now();await save();toast(oldProtected?'Proteção alterada para senha geral':'Caderno protegido com a senha geral');
+      }else if(wanted==='custom'){
+        const pwd=String(fd.get('customPassword')||''),cf=String(fd.get('customConfirm')||'');
+        if(oldProtected&&oldMode==='custom'&&!pwd&&!cf){document.getElementById('bookSecurityModal').classList.remove('open');toast('A senha exclusiva foi mantida');return}
+        if(pwd.length<4){msg.textContent='Use pelo menos 4 caracteres na nova senha.';return}if(pwd!==cf){msg.textContent='As senhas não coincidem.';return}
+        const nextSec=await makeBookSecurity('custom',pwd),nextKey=await deriveBookKey(pwd,nextSec.encSalt);
+        if(oldProtected)await rekeyImagesForBook(book.id,currentKey,nextKey);else await rekeyImagesForBook(book.id,null,nextKey);
+        book.security=nextSec;bookKeys.set(book.id,nextKey);book.updatedAt=Date.now();await save();toast(oldProtected?'Senha do caderno atualizada':'Caderno protegido com senha exclusiva');
+      }
+      document.getElementById('bookSecurityModal').classList.remove('open');
+      if(securityBookReturnToNotebook&&notebookState.bookId===book.id){renderNotebookPage()}else{await openBook(book.id)}
+    }catch(err){console.warn(err);msg.textContent='Não foi possível alterar a proteção agora.'}finally{btn.disabled=false}
+  }
+  function loadExternalScript(src,test){return new Promise((resolve,reject)=>{if(test())return resolve();const existing=[...document.scripts].find(x=>x.src===src);if(existing){existing.addEventListener('load',()=>test()?resolve():reject(new Error('Biblioteca indisponível')),{once:true});existing.addEventListener('error',reject,{once:true});return}const sc=document.createElement('script');sc.src=src;sc.async=true;sc.onload=()=>test()?resolve():reject(new Error('Biblioteca indisponível'));sc.onerror=()=>reject(new Error('Falha ao carregar biblioteca'));document.head.appendChild(sc)})}
+  async function ensurePdfLibraries(){await loadExternalScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',()=>!!window.html2canvas);await loadExternalScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',()=>!!window.jspdf?.jsPDF);return true}
+  function safePdfName(name){return String(name||'caderno').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9 _-]+/g,'').trim().replace(/\s+/g,'-').toLowerCase()||'caderno'}
+  async function waitForElementImages(el){const imgs=[...el.querySelectorAll('img')];await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=img.onerror=resolve})));await Promise.all(imgs.map(img=>img.decode?.().catch(()=>{})||Promise.resolve()))}
+  function pdfPageHtml(n){const hasImageBlock=String(n.content||'').includes('[[image]]');return `<div class="notebook-page-title">${esc(n.title)}</div><div class="notebook-page-text">${renderRichContent(n.content||'Sem texto nesta página.',n,true)}</div>${hasImageBlock?'':noteImageHtml(n,true)}`}
+  async function shareNotebookPdf(bookId){
+    const b=bookById(bookId);if(!b)return;if(isProtectedBook(b)&&!(await ensureBookUnlocked(b)))return;
+    const notes=orderedBookNotes(bookId);if(!notes.length){toast('Este caderno ainda está vazio');return}
+    const btn=document.getElementById('shareNotebookPdfBtn');const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='Preparando PDF...'}
+    try{await ensurePdfLibraries()}catch{if(btn){btn.disabled=false;btn.textContent=old||'📤 Compartilhar PDF'}alert('Para criar o PDF pela primeira vez, conecte-se à internet e tente novamente. Depois, o gerador fica disponível offline.');return}
+    const stage=document.createElement('div');stage.className='pdf-render-stage';document.body.appendChild(stage);
+    try{
+      const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();let first=true;
+      for(let i=0;i<notes.length;i++){
+        if(btn)btn.textContent=`Gerando ${i+1}/${notes.length}...`;
+        const paper=document.createElement('div');paper.className='notebook-paper';paper.innerHTML=pdfPageHtml(notes[i]);stage.appendChild(paper);await waitForElementImages(paper);drawRichLinks(paper);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+        const canvas=await window.html2canvas(paper,{backgroundColor:'#fffdf8',scale:1.35,useCORS:true,logging:false,width:paper.scrollWidth,height:paper.scrollHeight,windowWidth:paper.scrollWidth,windowHeight:paper.scrollHeight});
+        const slicePx=Math.max(1,Math.floor(canvas.width*(pageH/pageW)));let y=0;
+        while(y<canvas.height){const h=Math.min(slicePx,canvas.height-y),part=document.createElement('canvas');part.width=canvas.width;part.height=h;part.getContext('2d').drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);if(!first)pdf.addPage();first=false;const img=part.toDataURL('image/jpeg',0.9),drawH=pageW*(h/canvas.width);pdf.addImage(img,'JPEG',0,0,pageW,drawH,undefined,'FAST');y+=h}
+        paper.remove();
+      }
+      const blob=pdf.output('blob'),filename=`${safePdfName(b.name)}.pdf`,file=new File([blob],filename,{type:'application/pdf'});
+      if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({title:b.name,text:'Caderno exportado pelo Meu Caderno',files:[file]});toast('PDF pronto para compartilhar')}catch(err){if(err?.name!=='AbortError')throw err}}
+      else{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('PDF criado e salvo')}
+    }catch(err){console.warn('PDF:',err);alert('Não foi possível gerar o PDF deste caderno agora.')}finally{stage.remove();if(btn){btn.disabled=false;btn.textContent=old||'📤 Compartilhar PDF'}}
+  }
   async function openBook(id){
     const b=data.books.find(x=>x.id===id);if(!b)return;if(!(await ensureBookUnlocked(b)))return;show('books');const notes=orderedBookNotes(id);
-    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)} ${isProtectedBook(b)?'🔓':''}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p>${isProtectedBook(b)?'<div class="lock-badge" style="margin-bottom:9px">🔐 Conteúdo criptografado · desbloqueado nesta sessão</div>':''}<div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Nova página com foto</button></div><button class="secondary danger" id="deleteBookBtn" style="width:100%;margin-top:8px">🗑️ Excluir caderno</button><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
-    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('note',null,id);document.getElementById('deleteBookBtn').onclick=()=>deleteBook(id)
+    document.getElementById('allBooks').innerHTML=`<div style="grid-column:1/-1"><div class="section-head"><h2>${esc(b.emoji||'📘')} ${esc(b.name)} ${isProtectedBook(b)?'🔓':''}</h2><button class="link-btn" id="backBooks">← Todos</button></div><p style="color:var(--muted);margin-top:-4px">${esc(b.description||'')}</p>${isProtectedBook(b)?'<div class="lock-badge" style="margin-bottom:9px">🔐 Conteúdo criptografado · desbloqueado nesta sessão</div>':''}<div class="row" style="margin-top:14px"><button class="secondary" id="openNotebookBtn">📖 Abrir como caderno</button><button class="secondary" id="scanBookBtn">📷 Nova página com foto</button></div><button class="secondary" id="manageBookSecurityBtn" style="width:100%;margin-top:8px">${isProtectedBook(b)?'🔐 Alterar / remover proteção':'🔒 Trancar este caderno'}</button><button class="secondary danger" id="deleteBookBtn" style="width:100%;margin-top:8px">🗑️ Excluir caderno</button><div class="note-list" id="bookNotes" style="margin-top:14px"></div></div>`;
+    renderList('bookNotes',notes,'Este caderno ainda está vazio.');document.getElementById('backBooks').onclick=renderAll;document.getElementById('openNotebookBtn').onclick=()=>openNotebook(id);document.getElementById('scanBookBtn').onclick=()=>openNote('note',null,id);document.getElementById('manageBookSecurityBtn').onclick=()=>openBookSecurity(id,false);document.getElementById('deleteBookBtn').onclick=()=>deleteBook(id)
   }
   async function deleteBook(bookId){
     const b=bookById(bookId);if(!b)return;
@@ -1004,10 +1086,16 @@
   document.getElementById('scanNextPageBtn').onclick=()=>{const id=notebookState.bookId;closeModals();openNote('note',null,id)};
   document.getElementById('editNotebookPageBtn').onclick=()=>{const notes=orderedBookNotes(notebookState.bookId),n=notes[notebookState.index];if(n){closeModals();openNote(n.type,n)}};
   document.getElementById('deleteNotebookBtn').onclick=()=>deleteBook(notebookState.bookId);
+  document.getElementById('notebookSecurityBtn').onclick=()=>openBookSecurity(notebookState.bookId,true);
+  document.getElementById('shareNotebookPdfBtn').onclick=()=>shareNotebookPdf(notebookState.bookId);
   document.getElementById('cloudBtn').onclick=document.getElementById('firebaseInfoBtn').onclick=()=>openModal('firebaseModal');
   document.getElementById('reviewSwitch').onclick=e=>{data.settings.review=!data.settings.review;e.currentTarget.classList.toggle('on',data.settings.review);save()};
   function updateBookProtectionFields(){const mode=document.getElementById('bookProtectionSelect').value,box=document.getElementById('bookLockOptions'),custom=document.getElementById('bookCustomPasswordFields'),hint=document.getElementById('bookGeneralHint');box.style.display=mode==='none'?'none':'grid';custom.classList.toggle('show',mode==='custom');hint.style.display=mode==='general'?'block':'none'}
   document.getElementById('bookProtectionSelect').onchange=updateBookProtectionFields;updateBookProtectionFields();
+  document.getElementById('existingBookProtectionSelect').onchange=updateExistingBookProtectionFields;
+  document.getElementById('bookSecurityClose').onclick=()=>document.getElementById('bookSecurityModal').classList.remove('open');
+  document.getElementById('bookSecurityForm').onsubmit=async e=>{e.preventDefault();await saveExistingBookSecurity(e.currentTarget)};
+  document.getElementById('lockThisBookNowBtn').onclick=async()=>{const id=document.getElementById('securityBookId').value,b=bookById(id);if(!b||!isProtectedBook(b))return;try{const snap=await buildSecureSnapshot(),lockedNotes=snap.notes.filter(n=>n.bookId===id);localStorage.setItem(accountKey(activeUid),JSON.stringify(snap));window.FirebaseBridge?.queueSync?.(snap);data.notes=[...data.notes.filter(n=>n.bookId!==id),...lockedNotes];bookKeys.delete(id);if(b.security.mode==='general'&&!data.books.some(x=>x.id!==id&&x.security?.locked&&x.security.mode==='general'&&bookKeys.has(x.id)))generalPasswordSession='';document.getElementById('bookSecurityModal').classList.remove('open');closeModals();renderAll();toast('Caderno bloqueado')}catch(err){console.warn(err);toast('Não foi possível bloquear agora')}};
   document.getElementById('hideLockedNamesSwitch').onclick=e=>{const sec=securitySettings();sec.hideLockedNames=!(sec.hideLockedNames!==false);e.currentTarget.classList.toggle('on',sec.hideLockedNames);save()};
   document.getElementById('autoLockSelect').onchange=e=>{securitySettings().autoLock=e.target.value;lastSecurityActivity=Date.now();save();scheduleAutoLock()};
   document.getElementById('lockAllBooksBtn').onclick=()=>lockAllProtected();
@@ -1038,7 +1126,7 @@
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
   let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
   document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=21').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=22').catch(()=>{}));
   renderAll();
 })();
 </script>
