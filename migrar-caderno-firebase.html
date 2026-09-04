@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Migrar Caderno → Firebase da Central</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6fb;color:#20283a;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+h1{margin:0 0 8px;font-size:28px}
+p{line-height:1.5}
+.card{background:#fff;border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 10px 30px rgba(31,41,55,.08)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:12px;font-weight:800;margin:10px 0 6px}
+input{width:100%;padding:13px 14px;border:1px solid #dfe3ee;border-radius:14px;font-size:15px}
+button{width:100%;border:0;border-radius:14px;padding:14px;font-size:14px;font-weight:850;cursor:pointer;background:#667eea;color:#fff;margin-top:12px}
+button.secondary{background:#eef1ff;color:#4c5fd7}
+button.danger{background:#fff2f2;color:#c74242;border:1px solid #ffd3d3}
+button:disabled{opacity:.5;cursor:not-allowed}
+small,.muted{color:#687187}
+.status{padding:12px 14px;border-radius:14px;background:#f6f7fb;margin-top:12px;white-space:pre-wrap;word-break:break-word}
+.ok{background:#edf9f3;color:#257654}
+.warn{background:#fff8e8;color:#8b6518}
+.err{background:#fff1f1;color:#a13b3b}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.count{background:#f7f8fc;border-radius:16px;padding:12px;text-align:center}
+.count b{display:block;font-size:22px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.counts{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Migrar Meu Caderno</h1>
+  <p class="muted">Copia os textos do Firebase antigo do Caderno para o Firebase da Central. A migração é não destrutiva: ela não apaga o Firebase antigo.</p>
+
+  <section class="card">
+    <h2>1. Conta do Firebase antigo</h2>
+    <div class="grid">
+      <div>
+        <label>E-mail usado no Caderno antigo</label>
+        <input id="oldEmail" type="email" autocomplete="username">
+      </div>
+      <div>
+        <label>Senha</label>
+        <input id="oldPassword" type="password" autocomplete="current-password">
+      </div>
+    </div>
+    <button id="readOld">Ler dados antigos</button>
+    <div id="oldStatus" class="status">Aguardando.</div>
+
+    <div class="counts">
+      <div class="count"><b id="booksCount">0</b><span>Cadernos</span></div>
+      <div class="count"><b id="notesCount">0</b><span>Notas</span></div>
+      <div class="count"><b id="schemaName">—</b><span>Estrutura</span></div>
+    </div>
+
+    <button class="secondary" id="backupBtn" disabled>Baixar backup JSON antes de migrar</button>
+  </section>
+
+  <section class="card">
+    <h2>2. Conta da Central de Apps</h2>
+    <p class="muted">Use a conta que já está aprovada na Central. Ela pode ter o mesmo e-mail/senha do Caderno antigo, mas o UID pode ser diferente.</p>
+    <div class="grid">
+      <div>
+        <label>E-mail da Central</label>
+        <input id="centralEmail" type="email" autocomplete="username">
+      </div>
+      <div>
+        <label>Senha</label>
+        <input id="centralPassword" type="password" autocomplete="current-password">
+      </div>
+    </div>
+    <button id="migrateBtn" disabled>Migrar para o Firebase da Central</button>
+    <div id="centralStatus" class="status">Primeiro leia os dados antigos.</div>
+  </section>
+
+  <section class="card">
+    <h2>Destino</h2>
+    <code>usuarios/{UID_DA_CENTRAL}/apps/meu-caderno/books</code><br><br>
+    <code>usuarios/{UID_DA_CENTRAL}/apps/meu-caderno/notes</code>
+    <p class="muted">Imagens não entram nesta migração porque a versão antiga do Caderno sincronizava apenas os textos.</p>
+  </section>
+</main>
+
+<script type="module">
+const OLD_CONFIG = {
+  apiKey: "AIzaSyCGRQ48-pMA1ez1Metj3xnY2BjpSnuDw54",
+  authDomain: "caderno-virtual-1040f.firebaseapp.com",
+  projectId: "caderno-virtual-1040f",
+  storageBucket: "caderno-virtual-1040f.firebasestorage.app",
+  messagingSenderId: "83448256290",
+  appId: "1:83448256290:web:2b390d826553e09d98b77b",
+  measurementId: "G-DY0CD0W0PR"
+};
+
+const CENTRAL_CONFIG = {
+  apiKey: "AIzaSyA8zLyzYwRv3qDIw-8H4_Tesy8iiH1haaA",
+  authDomain: "central-de-apps.firebaseapp.com",
+  projectId: "central-de-apps",
+  storageBucket: "central-de-apps.firebasestorage.app",
+  messagingSenderId: "222066712643",
+  appId: "1:222066712643:web:130c3d5ebc5c4b935d74f6",
+  measurementId: "G-44P6G2ZSE3"
+};
+
+const [appM, authM, fsM] = await Promise.all([
+  import("https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js"),
+  import("https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js"),
+  import("https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js")
+]);
+
+const oldApp = appM.initializeApp(OLD_CONFIG, "caderno-antigo-migracao");
+const centralApp = appM.initializeApp(CENTRAL_CONFIG, "central-destino-migracao");
+const oldAuth = authM.getAuth(oldApp);
+const centralAuth = authM.getAuth(centralApp);
+const oldDb = fsM.getFirestore(oldApp);
+const centralDb = fsM.getFirestore(centralApp);
+
+let snapshot = null;
+
+const $ = id => document.getElementById(id);
+function msg(el, text, cls=""){
+  el.className = "status" + (cls ? " "+cls : "");
+  el.textContent = text;
+}
+function cleanDocData(data, fallbackId){
+  const x = {...(data||{})};
+  if(!x.id && fallbackId) x.id = fallbackId;
+  if(x.image) x.hasImage = true;
+  delete x.image;
+  return x;
+}
+async function readKnownSchema(uid){
+  const rootRef = fsM.doc(oldDb,"users",uid);
+  const rootSnap = await fsM.getDoc(rootRef);
+
+  let books = [];
+  let notes = [];
+  try {
+    const s = await fsM.getDocs(fsM.collection(oldDb,"users",uid,"books"));
+    books = s.docs.map(d=>cleanDocData(d.data(), d.id));
+  } catch(e) {
+    if(e?.code !== "permission-denied") console.warn(e);
+  }
+  try {
+    const s = await fsM.getDocs(fsM.collection(oldDb,"users",uid,"notes"));
+    notes = s.docs.map(d=>cleanDocData(d.data(), d.id));
+  } catch(e) {
+    if(e?.code !== "permission-denied") console.warn(e);
+  }
+
+  if(rootSnap.exists() || books.length || notes.length){
+    const meta = rootSnap.exists() ? rootSnap.data() : {};
+    return {
+      schema:"users",
+      version:meta.version || 3,
+      settings:meta.settings || {review:true},
+      updatedAt:meta.clientUpdatedAt || meta.updatedAt || 0,
+      books,notes
+    };
+  }
+
+  const legacyRef = fsM.doc(oldDb,"meu-caderno",uid);
+  const legacySnap = await fsM.getDoc(legacyRef);
+  if(legacySnap.exists()){
+    const d = legacySnap.data() || {};
+    return {
+      schema:"meu-caderno",
+      version:d.version || 1,
+      settings:d.settings || {review:true},
+      updatedAt:d.updatedAt || d.clientUpdatedAt || 0,
+      books:(d.books||[]).map(x=>cleanDocData(x,x?.id)),
+      notes:(d.notes||[]).map(x=>cleanDocData(x,x?.id))
+    };
+  }
+  return null;
+}
+
+$("readOld").onclick = async () => {
+  const email = $("oldEmail").value.trim();
+  const password = $("oldPassword").value;
+  if(!email || !password) return msg($("oldStatus"),"Digite e-mail e senha do Caderno antigo.","warn");
+
+  $("readOld").disabled = true;
+  msg($("oldStatus"),"Entrando no Firebase antigo e procurando os dados...");
+  try{
+    const cred = await authM.signInWithEmailAndPassword(oldAuth,email,password);
+    const data = await readKnownSchema(cred.user.uid);
+    if(!data){
+      snapshot = null;
+      $("backupBtn").disabled = true;
+      $("migrateBtn").disabled = true;
+      $("booksCount").textContent = "0";
+      $("notesCount").textContent = "0";
+      $("schemaName").textContent = "—";
+      return msg($("oldStatus"),
+        "A conta entrou, mas não encontrei dados nas estruturas conhecidas do Caderno.\nUID antigo: "+cred.user.uid,
+        "warn");
+    }
+
+    snapshot = {
+      exportedAt:new Date().toISOString(),
+      oldProject:OLD_CONFIG.projectId,
+      oldUid:cred.user.uid,
+      oldEmail:cred.user.email || email,
+      ...data
+    };
+
+    $("booksCount").textContent = data.books.length;
+    $("notesCount").textContent = data.notes.length;
+    $("schemaName").textContent = data.schema;
+    $("backupBtn").disabled = false;
+    $("migrateBtn").disabled = false;
+
+    if(!$("centralEmail").value) $("centralEmail").value = email;
+
+    msg($("oldStatus"),
+      `Dados encontrados.\nUID antigo: ${cred.user.uid}\nCadernos: ${data.books.length}\nNotas: ${data.notes.length}`,
+      "ok");
+  }catch(err){
+    console.error(err);
+    const map = {
+      "auth/invalid-credential":"E-mail ou senha incorretos no Firebase antigo.",
+      "auth/user-not-found":"A conta não existe no Firebase antigo.",
+      "auth/wrong-password":"Senha incorreta no Firebase antigo.",
+      "auth/too-many-requests":"Muitas tentativas. Aguarde e tente novamente.",
+      "permission-denied":"A conta entrou, mas as regras do Firebase antigo não permitiram ler os dados."
+    };
+    msg($("oldStatus"), map[err?.code] || `Erro: ${err?.code || err?.message || err}`,"err");
+  }finally{
+    $("readOld").disabled = false;
+  }
+};
+
+$("backupBtn").onclick = () => {
+  if(!snapshot) return;
+  const blob = new Blob([JSON.stringify(snapshot,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `meu-caderno-backup-antigo-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+};
+
+$("migrateBtn").onclick = async () => {
+  if(!snapshot) return msg($("centralStatus"),"Leia os dados antigos primeiro.","warn");
+  const email = $("centralEmail").value.trim();
+  const password = $("centralPassword").value;
+  if(!email || !password) return msg($("centralStatus"),"Digite e-mail e senha da Central.","warn");
+
+  $("migrateBtn").disabled = true;
+  msg($("centralStatus"),"Entrando na Central e preparando a migração...");
+  try{
+    const cred = await authM.signInWithEmailAndPassword(centralAuth,email,password);
+    const uid = cred.user.uid;
+
+    const userDoc = await fsM.getDoc(fsM.doc(centralDb,"usuarios",uid));
+    if(!userDoc.exists() || userDoc.data()?.ativo !== true || userDoc.data()?.bloqueado === true){
+      throw new Error("central-user-not-active");
+    }
+
+    const rootRef = fsM.doc(centralDb,"usuarios",uid,"apps","meu-caderno");
+    const existing = await fsM.getDoc(rootRef);
+    if(existing.exists()){
+      const ok = confirm("Já existem dados do Meu Caderno no Firebase da Central. A migração vai adicionar/atualizar itens com o mesmo ID, sem apagar outros itens. Continuar?");
+      if(!ok) return msg($("centralStatus"),"Migração cancelada. Nenhum dado foi alterado.","warn");
+    }
+
+    msg($("centralStatus"),`Migrando ${snapshot.books.length} caderno(s) e ${snapshot.notes.length} nota(s)...`);
+
+    await fsM.setDoc(rootRef,{
+      appId:"meu-caderno",
+      version:4,
+      email:cred.user.email || email,
+      settings:snapshot.settings || {review:true},
+      clientUpdatedAt:Number(snapshot.updatedAt) || Date.now(),
+      syncMode:"text-only",
+      migratedFrom:{
+        projectId:snapshot.oldProject,
+        oldUid:snapshot.oldUid,
+        schema:snapshot.schema,
+        migratedAt:new Date().toISOString()
+      },
+      updatedAt:fsM.serverTimestamp()
+    },{merge:true});
+
+    let done = 0;
+    const total = snapshot.books.length + snapshot.notes.length;
+    const batches = [];
+
+    for(const b of snapshot.books){
+      const id = String(b.id || crypto.randomUUID());
+      batches.push(()=>fsM.setDoc(
+        fsM.doc(centralDb,"usuarios",uid,"apps","meu-caderno","books",id),
+        {...b,id},
+        {merge:true}
+      ));
+    }
+    for(const n of snapshot.notes){
+      const id = String(n.id || crypto.randomUUID());
+      const clean = cleanDocData(n,id);
+      batches.push(()=>fsM.setDoc(
+        fsM.doc(centralDb,"usuarios",uid,"apps","meu-caderno","notes",id),
+        {...clean,id},
+        {merge:true}
+      ));
+    }
+
+    for(let i=0;i<batches.length;i+=20){
+      await Promise.all(batches.slice(i,i+20).map(fn=>fn()));
+      done = Math.min(i+20,total);
+      msg($("centralStatus"),`Migrando... ${done}/${total}`);
+    }
+
+    msg($("centralStatus"),
+      `Migração concluída.\nUID antigo: ${snapshot.oldUid}\nUID da Central: ${uid}\nCadernos: ${snapshot.books.length}\nNotas: ${snapshot.notes.length}\n\nAgora abra o Caderno atualizado e entre com a conta da Central.`,
+      "ok");
+  }catch(err){
+    console.error(err);
+    let text;
+    if(err?.message === "central-user-not-active") {
+      text = "A conta entrou no Firebase da Central, mas ela não está ativa/aprovada na Central de Apps.";
+    } else if(err?.code === "permission-denied") {
+      text = "Permissão negada no Firebase da Central. Publique primeiro as novas regras do Firestore que liberam usuarios/{uid}/apps/{appId}.";
+    } else if(err?.code === "auth/invalid-credential") {
+      text = "E-mail ou senha incorretos na conta da Central.";
+    } else {
+      text = `Erro: ${err?.code || err?.message || err}`;
+    }
+    msg($("centralStatus"),text,"err");
+  }finally{
+    $("migrateBtn").disabled = false;
+  }
+};
+</script>
+</body>
+</html>
