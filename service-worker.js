@@ -1,14 +1,59 @@
-const CACHE='meu-caderno-v24-firebase-central';
+const CACHE='meu-caderno-v24-central-sync-fix';
 const CORE=['./','./index.html','./manifest.json','./icone.png','./firebase-config.js','./firebase-sync.js','./auth-guard-v3.js'];
-const OPTIONAL=['https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async c=>{await c.addAll(CORE);await Promise.allSettled(OPTIONAL.map(async url=>{try{const r=await fetch(url);if(r.ok)await c.put(url,r.clone())}catch{}}))}).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+const OPTIONAL=[
+  'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+  'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+];
+
+self.addEventListener('install',event=>{
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(async c=>{
+        await c.addAll(CORE);
+        await Promise.allSettled(OPTIONAL.map(async url=>{
+          try{
+            const r=await fetch(url);
+            if(r.ok)await c.put(url,r.clone());
+          }catch{}
+        }));
+      })
+      .then(()=>self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate',event=>{
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
+
   const url=new URL(event.request.url);
+
   if(url.origin!==location.origin){
-    event.respondWith(fetch(event.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(event.request,copy)).catch(()=>{});return res}).catch(()=>caches.match(event.request)));
+    event.respondWith(
+      fetch(event.request)
+        .then(res=>{
+          const copy=res.clone();
+          caches.open(CACHE).then(c=>c.put(event.request,copy)).catch(()=>{});
+          return res;
+        })
+        .catch(()=>caches.match(event.request))
+    );
     return;
   }
-  event.respondWith(fetch(event.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));return res}).catch(()=>caches.match(event.request).then(r=>r||caches.match('./index.html'))));
+
+  event.respondWith(
+    fetch(event.request)
+      .then(res=>{
+        const copy=res.clone();
+        caches.open(CACHE).then(c=>c.put(event.request,copy)).catch(()=>{});
+        return res;
+      })
+      .catch(()=>caches.match(event.request).then(r=>r||caches.match('./index.html')))
+  );
 });

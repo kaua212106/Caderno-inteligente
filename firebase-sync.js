@@ -23,8 +23,6 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
       getFirestore, doc, collection, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp
     } = firestoreMod;
 
-    // Reutiliza o app Firebase padrão quando o auth-guard já o iniciou.
-    // Isso faz o Caderno usar a MESMA sessão/conta da Central no mesmo domínio.
     let app;
     try {
       app = getApp();
@@ -39,6 +37,7 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
     const auth = getAuth(app);
     const db = getFirestore(app);
     const APP_ID = String(cfg.appId || 'meu-caderno').replace(/[^a-zA-Z0-9_-]/g,'-');
+
     let user = null;
     let timer = null;
     let syncing = false;
@@ -54,7 +53,8 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
     function sanitizeData(data){
       return {
         ...data,
-        version: 4,
+        version: 5,
+        books: Array.isArray(data?.books) ? data.books.map(b=>({...b})) : [],
         notes: (data?.notes || []).map(note => {
           const clean = {...note};
           if (clean.image) clean.hasImage = true;
@@ -64,73 +64,150 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
       };
     }
 
+    function newestTimestamp(meta, books, notes){
+      const values = [
+        Number(meta?.clientUpdatedAt || 0),
+        ...books.map(x=>Number(x?.updatedAt || x?.createdAt || 0)),
+        ...notes.map(x=>Number(x?.updatedAt || x?.createdAt || 0))
+      ].filter(Number.isFinite);
+      return values.length ? Math.max(...values) : 0;
+    }
+
     async function pull(){
       if (!user) return null;
-      const root = await getDoc(appRoot());
-      if (!root.exists()) return null;
-      const [booksSnap,notesSnap] = await Promise.all([
+
+      // Importante: lê as subcoleções mesmo quando o documento "meu-caderno"
+      // não existe. Isso recupera migrações antigas em que só books/notes
+      // foram criados e evita tratar a nuvem como vazia por engano.
+      const [rootSnap, booksSnap, notesSnap] = await Promise.all([
+        getDoc(appRoot()),
         getDocs(booksCol()),
         getDocs(notesCol())
       ]);
-      const meta = root.data() || {};
+
+      const meta = rootSnap.exists() ? (rootSnap.data() || {}) : {};
+      const books = booksSnap.docs.map(d => ({id:d.id, ...d.data()}));
+      const notes = notesSnap.docs.map(d => {
+        const note = {id:d.id, ...d.data()};
+        delete note.image;
+        return note;
+      });
+
+      if (!rootSnap.exists() && !books.length && !notes.length) return null;
+
       return {
-        version: meta.version || 4,
+        version: meta.version || 5,
         settings: meta.settings || {review:true},
-        updatedAt: meta.clientUpdatedAt || 0,
-        books: booksSnap.docs.map(d=>d.data()),
-        notes: notesSnap.docs.map(d=>{
-          const note = {...d.data()};
-          delete note.image;
-          return note;
-        })
+        updatedAt: newestTimestamp(meta, books, notes),
+        books,
+        notes
       };
     }
 
     async function push(input){
-      if (!user) return;
+      if (!user) {
+        pendingSnapshot = sanitizeData(input || {});
+        return;
+      }
+
       const data = sanitizeData(input || {});
-      if (syncing) { pendingSnapshot = data; return; }
+
+      if (!navigator.onLine) {
+        pendingSnapshot = data;
+        return;
+      }
+
+      if (syncing) {
+        pendingSnapshot = data;
+        return;
+      }
+
       syncing = true;
       emit('firebase-sync-start');
+
       try {
-        const [remoteBooks,remoteNotes] = await Promise.all([getDocs(booksCol()),getDocs(notesCol())]);
-        const localBookIds = new Set((data.books||[]).map(x=>x.id));
-        const localNoteIds = new Set((data.notes||[]).map(x=>x.id));
+        const [remoteBooks, remoteNotes] = await Promise.all([
+          getDocs(booksCol()),
+          getDocs(notesCol())
+        ]);
+
+        const localBookIds = new Set((data.books || []).map(x => String(x.id)));
+        const localNoteIds = new Set((data.notes || []).map(x => String(x.id)));
         const writes = [];
 
+        // Cria/atualiza o documento pai. Assim ele passa a existir no console
+        // e o próximo aparelho consegue detectar a nuvem corretamente.
         writes.push(setDoc(appRoot(),{
-          appId:APP_ID,
-          version:4,
-          email:user.email || '',
-          settings:data.settings || {review:true},
-          clientUpdatedAt:data.updatedAt || Date.now(),
-          syncMode:'text-only',
-          updatedAt:serverTimestamp()
+          appId: APP_ID,
+          version: 5,
+          email: user.email || '',
+          settings: data.settings || {review:true},
+          clientUpdatedAt: Number(data.updatedAt) || Date.now(),
+          syncMode: 'text-only',
+          updatedAt: serverTimestamp()
         },{merge:true}));
 
-        for(const b of data.books||[]) writes.push(setDoc(doc(booksCol(),b.id),b));
-        for(const n of data.notes||[]) writes.push(setDoc(doc(notesCol(),n.id),n));
-        for(const d of remoteBooks.docs) if(!localBookIds.has(d.id)) writes.push(deleteDoc(d.ref));
-        for(const d of remoteNotes.docs) if(!localNoteIds.has(d.id)) writes.push(deleteDoc(d.ref));
+        for (const b of data.books || []) {
+          const id = String(b.id || crypto.randomUUID());
+          writes.push(setDoc(doc(booksCol(), id), {...b, id}, {merge:true}));
+        }
+
+        for (const n of data.notes || []) {
+          const id = String(n.id || crypto.randomUUID());
+          writes.push(setDoc(doc(notesCol(), id), {...n, id}, {merge:true}));
+        }
+
+        for (const d of remoteBooks.docs) {
+          if (!localBookIds.has(String(d.id))) writes.push(deleteDoc(d.ref));
+        }
+
+        for (const d of remoteNotes.docs) {
+          if (!localNoteIds.has(String(d.id))) writes.push(deleteDoc(d.ref));
+        }
+
         await Promise.all(writes);
       } finally {
-        syncing=false;
+        syncing = false;
         emit('firebase-sync-end');
+
         if (pendingSnapshot && user && navigator.onLine) {
           const next = pendingSnapshot;
           pendingSnapshot = null;
-          setTimeout(()=>push(next).catch(err=>console.warn('Sincronização pendente:',err)),50);
+          setTimeout(() => push(next).catch(err => console.warn('Sincronização pendente:', err)), 80);
         }
       }
     }
 
+    function queueSync(data){
+      const snapshot = sanitizeData(data || {});
+      pendingSnapshot = snapshot;
+
+      // Não descarta alterações se o Firebase ainda estiver iniciando
+      // ou se o aparelho estiver offline.
+      if (!user || !navigator.onLine) return;
+
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const next = pendingSnapshot;
+        pendingSnapshot = null;
+        push(next).catch(err => {
+          pendingSnapshot = next;
+          console.warn('Sincronização:', err);
+        });
+      }, 700);
+    }
+
     window.FirebaseBridge = {
       status: () => ({
-        configured:true,
-        connected:!!user && navigator.onLine,
-        signedIn:!!user,
-        email:user?.email||'',
-        label:user?(navigator.onLine?'Textos sincronizados com a conta da Central':'Offline · textos aguardam sincronização'):'Entre com a conta da Central'
+        configured: true,
+        connected: !!user && navigator.onLine,
+        signedIn: !!user,
+        email: user?.email || '',
+        label: user
+          ? (navigator.onLine
+              ? 'Textos sincronizados com a conta da Central'
+              : 'Offline · textos aguardam sincronização')
+          : 'Entre com a conta da Central'
       }),
       login: (email,password) => signInWithEmailAndPassword(auth,email,password),
       register: (email,password) => createUserWithEmailAndPassword(auth,email,password),
@@ -138,23 +215,46 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
       logout: () => signOut(auth),
       pull,
       push,
-      queueSync: data => {
-        if(!user || !navigator.onLine) return;
-        clearTimeout(timer);
-        const snapshot=sanitizeData(data);
-        timer=setTimeout(()=>push(snapshot).catch(err=>console.warn('Sincronização:',err)),900);
-      }
+      queueSync
     };
 
     onAuthStateChanged(auth, u => {
       user = u || null;
-      emit('firebase-auth-state',{user:user?{uid:user.uid,email:user.email||''}:null});
+
+      emit('firebase-auth-state',{
+        user: user ? {uid:user.uid,email:user.email || ''} : null
+      });
+
+      if (user && navigator.onLine && pendingSnapshot) {
+        const next = pendingSnapshot;
+        pendingSnapshot = null;
+        setTimeout(() => push(next).catch(err => {
+          pendingSnapshot = next;
+          console.warn('Sincronização após login:', err);
+        }), 120);
+      }
     });
+
+    window.addEventListener('online', () => {
+      if (user && pendingSnapshot) {
+        const next = pendingSnapshot;
+        pendingSnapshot = null;
+        setTimeout(() => push(next).catch(err => {
+          pendingSnapshot = next;
+          console.warn('Sincronização após voltar online:', err);
+        }), 120);
+      }
+    });
+
     emit('firebase-bridge-ready');
   } catch (err) {
     console.error('Firebase não iniciado:',err);
     window.FirebaseBridge = {
-      status:()=>({configured:true,connected:false,label:navigator.onLine?'Erro ao iniciar Firebase':'Offline'})
+      status:()=>({
+        configured:true,
+        connected:false,
+        label:navigator.onLine ? 'Erro ao iniciar Firebase' : 'Offline'
+      })
     };
     emit('firebase-bridge-ready');
   }
