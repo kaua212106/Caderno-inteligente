@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icone.png" />
   <title>Meu Caderno</title>
-  <meta name="app-build" content="v14-ligacao-real">
+  <meta name="app-build" content="v15-firebase-central">
 
   <!-- Proteção de acesso da Central de Apps -->
   <style>
@@ -1137,7 +1137,7 @@
   window.addEventListener('offline',()=>{updateCloud();const last=localStorage.getItem(LAST_ACCOUNT_KEY);document.getElementById('offlineAccessBtn').style.display=last?'block':'none'});
   let richLinkResizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(richLinkResizeTimer);richLinkResizeTimer=setTimeout(()=>document.querySelectorAll('.rich-link-scope').forEach(drawRichLinks),120)});
   document.addEventListener('scroll',e=>{if(e.target?.classList?.contains('rich-table-wrap'))scheduleRichLinks(e.target.closest('.rich-link-scope'))},{capture:true,passive:true});
-  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=23').catch(()=>{}));
+  if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js?v=24').catch(()=>{}));
   renderAll();
 })();
 </script>

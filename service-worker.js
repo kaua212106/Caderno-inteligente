@@ -1,4 +1,4 @@
-const CACHE='meu-caderno-v23-pdf-corrigido';
+const CACHE='meu-caderno-v24-firebase-central';
 const CORE=['./','./index.html','./manifest.json','./icone.png','./firebase-config.js','./firebase-sync.js','./auth-guard-v3.js'];
 const OPTIONAL=['https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async c=>{await c.addAll(CORE);await Promise.allSettled(OPTIONAL.map(async url=>{try{const r=await fetch(url);if(r.ok)await c.put(url,r.clone())}catch{}}))}).then(()=>self.skipWaiting()))});

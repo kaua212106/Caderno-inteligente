@@ -15,24 +15,41 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
     ]);
 
     const { initializeApp, getApp } = appMod;
-    const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } = authMod;
-    const { getFirestore, doc, collection, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp } = firestoreMod;
+    const {
+      getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail
+    } = authMod;
+    const {
+      getFirestore, doc, collection, getDoc, getDocs, setDoc, deleteDoc, serverTimestamp
+    } = firestoreMod;
 
-    const CADERNO_FIREBASE_APP_NAME = 'meu-caderno-cloud';
+    // Reutiliza o app Firebase padrão quando o auth-guard já o iniciou.
+    // Isso faz o Caderno usar a MESMA sessão/conta da Central no mesmo domínio.
     let app;
     try {
-      app = getApp(CADERNO_FIREBASE_APP_NAME);
-    } catch {
-      app = initializeApp(cfg.config, CADERNO_FIREBASE_APP_NAME);
+      app = getApp();
+      if (app.options?.projectId !== cfg.config.projectId) {
+        throw new Error('firebase-project-conflict');
+      }
+    } catch (err) {
+      if (String(err?.message || '').includes('firebase-project-conflict')) throw err;
+      app = initializeApp(cfg.config);
     }
+
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const APP_ID = String(cfg.appId || 'meu-caderno').replace(/[^a-zA-Z0-9_-]/g,'-');
     let user = null;
     let timer = null;
     let syncing = false;
     let pendingSnapshot = null;
 
-    try { await setPersistence(auth, browserLocalPersistence); } catch (e) { console.warn('Persistência do login:', e); }
+    try { await setPersistence(auth, browserLocalPersistence); }
+    catch (e) { console.warn('Persistência do login:', e); }
+
+    const appRoot = () => doc(db,'usuarios',user.uid,'apps',APP_ID);
+    const booksCol = () => collection(db,'usuarios',user.uid,'apps',APP_ID,'books');
+    const notesCol = () => collection(db,'usuarios',user.uid,'apps',APP_ID,'notes');
 
     function sanitizeData(data){
       return {
@@ -49,11 +66,11 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
 
     async function pull(){
       if (!user) return null;
-      const root = await getDoc(doc(db,'users',user.uid));
+      const root = await getDoc(appRoot());
       if (!root.exists()) return null;
       const [booksSnap,notesSnap] = await Promise.all([
-        getDocs(collection(db,'users',user.uid,'books')),
-        getDocs(collection(db,'users',user.uid,'notes'))
+        getDocs(booksCol()),
+        getDocs(notesCol())
       ]);
       const meta = root.data() || {};
       return {
@@ -76,14 +93,13 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
       syncing = true;
       emit('firebase-sync-start');
       try {
-        const booksCol = collection(db,'users',user.uid,'books');
-        const notesCol = collection(db,'users',user.uid,'notes');
-        const [remoteBooks,remoteNotes] = await Promise.all([getDocs(booksCol),getDocs(notesCol)]);
+        const [remoteBooks,remoteNotes] = await Promise.all([getDocs(booksCol()),getDocs(notesCol())]);
         const localBookIds = new Set((data.books||[]).map(x=>x.id));
         const localNoteIds = new Set((data.notes||[]).map(x=>x.id));
         const writes = [];
 
-        writes.push(setDoc(doc(db,'users',user.uid),{
+        writes.push(setDoc(appRoot(),{
+          appId:APP_ID,
           version:4,
           email:user.email || '',
           settings:data.settings || {review:true},
@@ -92,8 +108,8 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
           updatedAt:serverTimestamp()
         },{merge:true}));
 
-        for(const b of data.books||[]) writes.push(setDoc(doc(db,'users',user.uid,'books',b.id),b));
-        for(const n of data.notes||[]) writes.push(setDoc(doc(db,'users',user.uid,'notes',n.id),n));
+        for(const b of data.books||[]) writes.push(setDoc(doc(booksCol(),b.id),b));
+        for(const n of data.notes||[]) writes.push(setDoc(doc(notesCol(),n.id),n));
         for(const d of remoteBooks.docs) if(!localBookIds.has(d.id)) writes.push(deleteDoc(d.ref));
         for(const d of remoteNotes.docs) if(!localNoteIds.has(d.id)) writes.push(deleteDoc(d.ref));
         await Promise.all(writes);
@@ -114,7 +130,7 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
         connected:!!user && navigator.onLine,
         signedIn:!!user,
         email:user?.email||'',
-        label:user?(navigator.onLine?'Textos sincronizados com sua conta':'Offline · textos aguardam sincronização'):'Entre na sua conta'
+        label:user?(navigator.onLine?'Textos sincronizados com a conta da Central':'Offline · textos aguardam sincronização'):'Entre com a conta da Central'
       }),
       login: (email,password) => signInWithEmailAndPassword(auth,email,password),
       register: (email,password) => createUserWithEmailAndPassword(auth,email,password),
@@ -137,7 +153,9 @@ if (!cfg?.enabled || !cfg?.config?.projectId) {
     emit('firebase-bridge-ready');
   } catch (err) {
     console.error('Firebase não iniciado:',err);
-    window.FirebaseBridge = { status:()=>({configured:true,connected:false,label:navigator.onLine?'Erro ao iniciar Firebase':'Offline'}) };
+    window.FirebaseBridge = {
+      status:()=>({configured:true,connected:false,label:navigator.onLine?'Erro ao iniciar Firebase':'Offline'})
+    };
     emit('firebase-bridge-ready');
   }
 }
